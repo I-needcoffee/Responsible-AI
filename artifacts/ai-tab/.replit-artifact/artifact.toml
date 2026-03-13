@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "The AI Tab"
+version = "1.0.0"
+id = "artifacts/ai-tab"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 18294
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/ai-tab run dev"
+
+[services.env]
+PORT = "18294"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/ai-tab", "run", "build"]
+publicDir = "artifacts/ai-tab/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"

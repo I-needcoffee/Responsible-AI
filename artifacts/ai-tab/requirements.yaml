@@ -1,0 +1,15 @@
+packages:
+  "framer-motion": "For fluid card reveals and page transitions"
+  "clsx": "For conditional class name merging"
+  "tailwind-merge": "For merging tailwind classes safely"
+  "recharts": "For the visual comparison tool charts"
+
+images:
+  - path: "artifacts/ai-tab/public/images/hero-art.png"
+    description: "Abstract 3D geometric shapes (spheres, cylinders, waves) in warm terracotta, sage green, and cream colors, soft studio lighting, floating on a clean cream background, minimalist editorial aesthetic"
+    aspect_ratio: "16:9"
+
+notes:
+  - Assuming the workspace api-client-react hooks are successfully generated and available.
+  - Using wouter for routing as requested.
+  - Zod validation and fetching is handled by the orval generated client, so wrapper hooks just call them directly.

@@ -1,15 +1,20 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: API specification for The AI Tab - AI Resource Consumption Tracker
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: sources
+    description: Research sources and studies
+  - name: tasks
+    description: AI task types and resource estimates
+  - name: feedback
+    description: User source trust ratings
 paths:
   /healthz:
     get:
@@ -24,6 +29,69 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /sources:
+    get:
+      operationId: getSources
+      tags: [sources]
+      summary: Get all research sources
+      description: Returns all research sources with metadata
+      responses:
+        "200":
+          description: List of sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Source"
+  /tasks:
+    get:
+      operationId: getAiTasks
+      tags: [tasks]
+      summary: Get all AI task types
+      description: Returns all AI task types with resource consumption estimates
+      responses:
+        "200":
+          description: List of AI tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiTask"
+  /source-ratings:
+    post:
+      operationId: rateSource
+      tags: [feedback]
+      summary: Rate a source's trustworthiness
+      description: Submit a trust rating for a research source
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SourceRatingInput"
+      responses:
+        "200":
+          description: Rating submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SourceRating"
+    get:
+      operationId: getSourceRatings
+      tags: [feedback]
+      summary: Get all source ratings
+      description: Returns all user-submitted source trust ratings
+      responses:
+        "200":
+          description: List of ratings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SourceRating"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +101,166 @@ components:
           type: string
       required:
         - status
-
+    Source:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        authors:
+          type: array
+          items:
+            type: string
+        institution:
+          type: string
+        year:
+          type: integer
+        url:
+          type: string
+        category:
+          type: string
+          enum: [academic, industry, government, journalism]
+        methodology:
+          type: string
+        keyFindings:
+          type: string
+        limitations:
+          type: string
+        dataAvailability:
+          type: string
+          enum: [full, partial, limited, none]
+        avgTrustRating:
+          type: number
+        totalRatings:
+          type: integer
+      required:
+        - id
+        - title
+        - authors
+        - institution
+        - year
+        - url
+        - category
+        - methodology
+        - keyFindings
+        - limitations
+        - dataAvailability
+        - avgTrustRating
+        - totalRatings
+    AiTask:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+          enum: [chat, image, video, code, audio, search, training]
+        description:
+          type: string
+        energyWh:
+          $ref: "#/components/schemas/ResourceEstimate"
+        waterMl:
+          $ref: "#/components/schemas/ResourceEstimate"
+        co2Grams:
+          $ref: "#/components/schemas/ResourceEstimate"
+        equivalents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Equivalent"
+        sourceIds:
+          type: array
+          items:
+            type: string
+        dataConfidence:
+          type: string
+          enum: [high, medium, low, unknown]
+        notes:
+          type: string
+      required:
+        - id
+        - name
+        - category
+        - description
+        - energyWh
+        - waterMl
+        - co2Grams
+        - equivalents
+        - sourceIds
+        - dataConfidence
+        - notes
+    ResourceEstimate:
+      type: object
+      properties:
+        low:
+          type: number
+          nullable: true
+        mid:
+          type: number
+          nullable: true
+        high:
+          type: number
+          nullable: true
+        unit:
+          type: string
+        dataExists:
+          type: boolean
+        notes:
+          type: string
+      required:
+        - low
+        - mid
+        - high
+        - unit
+        - dataExists
+        - notes
+    Equivalent:
+      type: object
+      properties:
+        activity:
+          type: string
+        duration:
+          type: string
+        icon:
+          type: string
+      required:
+        - activity
+        - duration
+        - icon
+    SourceRatingInput:
+      type: object
+      properties:
+        sourceId:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+      required:
+        - sourceId
+        - rating
+    SourceRating:
+      type: object
+      properties:
+        id:
+          type: integer
+        sourceId:
+          type: string
+        rating:
+          type: integer
+        comment:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - sourceId
+        - rating
+        - comment
+        - createdAt

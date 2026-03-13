@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:ital,wght@0,400..800;1,400..800&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-display: 'Fraunces', serif;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+
+  --color-background: hsl(40 33% 96%);
+  --color-foreground: hsl(30 14% 15%);
+  
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(30 14% 15%);
+  
+  --color-primary: hsl(14 60% 59%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  
+  --color-secondary: hsl(132 11% 49%);
+  --color-secondary-foreground: hsl(0 0% 100%);
+  
+  --color-muted: hsl(45 22% 92%);
+  --color-muted-foreground: hsl(30 10% 40%);
+  
+  --color-accent: hsl(39 60% 75%);
+  --color-accent-foreground: hsl(30 14% 15%);
+  
+  --color-destructive: hsl(0 84% 60%);
+  --color-destructive-foreground: hsl(210 40% 98%);
+  
+  --color-border: hsl(45 22% 87%);
+  --color-ring: hsl(14 60% 59%);
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased font-sans selection:bg-primary/20;
+    background-image: radial-gradient(hsl(var(--border)) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+  }
+}
