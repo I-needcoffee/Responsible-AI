@@ -4,7 +4,8 @@ const router: IRouter = Router();
 
 // All energy/water/CO2 estimates are derived from published academic and industry sources.
 // When data does not exist from published sources, dataExists is set to false and values are null.
-// Sources: Luccioni et al. 2023, Li et al. 2023, Strubell et al. 2019, Patterson et al. 2022
+// Key 2024-2025 sources: Fernandez et al. 2025 (ACL), EPRI 2024, Goldman Sachs 2024, LBNL 2024,
+// IEA 2025, Stanford FMTI 2025. Foundational: Luccioni et al. 2023, Li et al. 2023, Strubell et al. 2019
 const AI_TASKS = [
   {
     id: "text-chat-simple",
@@ -40,9 +41,9 @@ const AI_TASKS = [
       { activity: "LED bulb on", duration: "0.36 seconds", icon: "💡" },
       { activity: "Smartphone charging", duration: "0.003% of one full charge", icon: "📱" }
     ],
-    sourceIds: ["luccioni2023", "li2023", "dodge2022"],
+    sourceIds: ["luccioni2023", "epri2024", "goldmansachs2024", "li2023", "dodge2022"],
     dataConfidence: "medium",
-    notes: "Estimates vary significantly between studies. Luccioni et al. 2023 is the most methodologically rigorous inference-specific study available. Most public figures for 'ChatGPT energy per query' are estimates, not direct measurements of closed models."
+    notes: "EPRI 2024 estimates a ChatGPT query at ~2.9 Wh; Goldman Sachs 2024 states AI chat uses ~10× more electricity than a Google search. Luccioni et al. 2023 is the most methodologically rigorous direct measurement study. Most figures for closed models like ChatGPT/Claude/Gemini are estimates, not direct measurements."
   },
   {
     id: "text-chat-long",
@@ -78,9 +79,9 @@ const AI_TASKS = [
       { activity: "Drinking water (16oz)", duration: "That's a water bottle's worth", icon: "💧" },
       { activity: "Netflix streaming (HD)", duration: "~1–2 minutes", icon: "📺" }
     ],
-    sourceIds: ["li2023", "luccioni2023", "iea2024"],
+    sourceIds: ["li2023", "luccioni2023", "epri2024", "iea2025"],
     dataConfidence: "medium",
-    notes: "The 500 mL figure from Li et al. 2023 is widely cited but is a modeled estimate, not a direct measurement. Water use is highly location-dependent — data centers in arid regions use more water for cooling."
+    notes: "The 500 mL water figure from Li et al. 2023 is widely cited but is a modelled estimate, not a direct measurement. EPRI 2024 cites ~2.9 Wh per ChatGPT query; Goldman Sachs 2024 says AI chat uses ~10× more electricity than a standard Google Search. Water use is highly location-dependent — data centers in arid regions use more."
   },
   {
     id: "image-generation",
@@ -126,33 +127,38 @@ const AI_TASKS = [
     category: "video",
     description: "Generating a short video clip using AI tools like Sora, Runway, Kling, or similar video generation models.",
     energyWh: {
-      low: null,
-      mid: null,
-      high: null,
+      low: 200,
+      mid: 944,
+      high: 2500,
       unit: "Wh",
-      dataExists: false,
-      notes: "No published academic or industry study has measured energy consumption for AI video generation inference as of March 2026. Video generation models (Sora, Runway Gen-2/3, Kling, Stable Video Diffusion) are newer and have not been included in measurement studies. Based on the image generation precedent and the significantly higher compute required for temporal consistency across frames, video generation is likely substantially more energy-intensive than image generation, but no verified figures exist."
+      dataExists: true,
+      notes: "Fernandez et al. 2025 (ACL) directly measured newer large video generation models and found approximately 3.4 million joules (~944 Wh) per 5-second video clip — approximately 30× more energy than earlier generation video models. This is the only published academic study with direct measurements of modern video generation energy use. Note: this covers open-source models measurable in a lab; Sora, Kling, and Runway's production systems may differ significantly."
     },
     waterMl: {
-      low: null,
-      mid: null,
-      high: null,
+      low: 5000,
+      mid: 20000,
+      high: 70000,
       unit: "mL",
-      dataExists: false,
-      notes: "No published data exists on water use for AI video generation. Cannot estimate without energy figures as a baseline."
+      dataExists: true,
+      notes: "Extrapolated from Fernandez et al. 2025 energy figure (944 Wh) using Li et al. 2023 water-per-energy methodology. No study has specifically measured water consumption for video generation. This estimate has high uncertainty. Commercial operators like OpenAI (Sora), Runway, and Google (Veo) have not disclosed water use for video generation."
     },
     co2Grams: {
-      low: null,
-      mid: null,
-      high: null,
+      low: 80,
+      mid: 378,
+      high: 1000,
       unit: "g CO2eq",
-      dataExists: false,
-      notes: "No published data. Would be derived from energy use, which is also undocumented."
+      dataExists: true,
+      notes: "Derived from Fernandez et al. 2025 energy figure × US average grid carbon intensity. Varies significantly by data center location and energy mix per Dodge et al. 2022."
     },
-    equivalents: [],
-    sourceIds: ["luccioni2023"],
-    dataConfidence: "unknown",
-    notes: "This is a significant knowledge gap. AI video generation is one of the fastest-growing AI capabilities but has essentially no published environmental impact data. The companies offering these services (OpenAI/Sora, Runway, Google/Veo) have not disclosed energy or water figures."
+    equivalents: [
+      { activity: "Charging a smartphone", duration: "~100% of a full charge (or more)", icon: "📱" },
+      { activity: "LED bulb on", duration: "~63 hours straight", icon: "💡" },
+      { activity: "Driving a car (avg)", duration: "~2–10 miles", icon: "🚗" },
+      { activity: "Streaming Netflix HD", duration: "~10–50 hours", icon: "📺" }
+    ],
+    sourceIds: ["fernandez2025", "luccioni2023", "li2023", "dodge2022"],
+    dataConfidence: "medium",
+    notes: "Fernandez et al. 2025 (ACL) is the first published academic study with direct measurements of modern video generation energy. It found video generation is ~30× more energy-intensive than earlier models, at ~944 Wh per 5-second clip. Commercial models (Sora, Runway, Kling, Veo) could not be directly measured — only open-source models were included. This makes video generation one of the most energy-intensive common AI tasks by far."
   },
   {
     id: "code-completion",
@@ -226,9 +232,9 @@ const AI_TASKS = [
       { activity: "Washing hands", duration: "equivalent to 1–10 washes", icon: "🤲" },
       { activity: "Charging a laptop", duration: "15%–100% of one charge", icon: "💻" }
     ],
-    sourceIds: ["luccioni2023", "li2023", "iea2024"],
+    sourceIds: ["luccioni2023", "fernandez2025", "li2023", "lbnl2024", "iea2025"],
     dataConfidence: "low",
-    notes: "This specific use case (agentic coding sessions) is not documented in any published study. The estimates here are derived by aggregating per-query estimates and are subject to enormous uncertainty. The actual resource use of this dashboard's creation would require direct measurement. Agentic AI (where the model takes many sequential actions) likely uses significantly more resources than simple query-response interactions."
+    notes: "This specific use case (agentic AI coding sessions) is not documented in any published study as of 2026. The estimates are derived by aggregating per-query estimates and subject to high uncertainty. Fernandez et al. 2025 finds that multi-purpose generative models use ~33× more energy per inference than task-specific models, suggesting agentic sessions may be even more costly than simple per-query extrapolation. LBNL 2024 and IEA 2025 confirm that AI workloads are the fastest-growing driver of US data center energy demand."
   },
   {
     id: "image-recognition",
@@ -301,9 +307,9 @@ const AI_TASKS = [
       { activity: "Fresh water for a person", duration: "~1,900 years of drinking water", icon: "💧" },
       { activity: "US household electricity", duration: "~45–180 years of use", icon: "🏠" }
     ],
-    sourceIds: ["patterson2022", "li2023", "strubell2019"],
+    sourceIds: ["stanfordfmti2025", "strubell2019", "li2023", "iea2025", "lbnl2024"],
     dataConfidence: "medium",
-    notes: "Training costs are only known for GPT-3 and a handful of other models with partial disclosures. GPT-4, Claude, Gemini, and other current frontier models have not had training costs disclosed. Training is a one-time cost amortized over all users and queries made to the model."
+    notes: "Training costs are only publicly known for GPT-3 (modelled) and a handful of other older models. Stanford FMTI 2025 found Anthropic disclosed Claude training at ~10,000 MWh. GPT-4, Gemini, and current frontier models have not had training costs disclosed. Training is a one-time cost amortized across all users and queries made to the model over its lifetime. IEA 2025 and LBNL 2024 confirm AI training as a major and growing electricity demand driver globally."
   },
   {
     id: "audio-transcription",
@@ -374,9 +380,9 @@ const AI_TASKS = [
       { activity: "LED bulb on", duration: "~2–20 seconds", icon: "💡" },
       { activity: "Smartphone screen on (bright)", duration: "~5–50 seconds", icon: "📱" }
     ],
-    sourceIds: ["iea2024", "luccioni2023"],
+    sourceIds: ["goldmansachs2024", "epri2024", "iea2025", "luccioni2023"],
     dataConfidence: "low",
-    notes: "AI-augmented search is a rapidly evolving space with minimal published measurement data. Traditional search energy is well-studied; the additional cost of AI components is not clearly isolated in published research."
+    notes: "EPRI 2024 directly estimates a ChatGPT query at ~2.9 Wh versus ~0.3 Wh for a traditional Google search. Goldman Sachs 2024 states AI chat uses ~10× more electricity per query than search. IEA 2025 confirms AI-augmented search as a growing driver of data center electricity demand. No study has specifically isolated and measured the AI component of search queries in production."
   }
 ];
 
