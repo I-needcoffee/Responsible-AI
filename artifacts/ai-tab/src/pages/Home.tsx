@@ -1,10 +1,24 @@
+import { useState } from "react";
 import { useTasks } from "@/hooks/use-tasks";
 import { TaskCard } from "@/components/TaskCard";
 import { motion } from "framer-motion";
-import { Zap, Droplets, Tv, Sparkles } from "lucide-react";
+import { Zap, Droplets, Tv, Sparkles, Info, BookOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const CATEGORY_FILTERS = [
+  { id: "all", label: "All tasks" },
+  { id: "chat", label: "Chat" },
+  { id: "image", label: "Image" },
+  { id: "video", label: "Video" },
+  { id: "code", label: "Code" },
+  { id: "audio", label: "Audio" },
+  { id: "search", label: "Search" },
+  { id: "training", label: "Training" },
+];
 
 export default function Home() {
   const { data: tasks, isLoading, error } = useTasks();
+  const [activeFilter, setActiveFilter] = useState("all");
 
   if (isLoading) {
     return (
@@ -19,93 +33,130 @@ export default function Home() {
     return (
       <div className="text-center py-20 bg-destructive/5 rounded-3xl border border-destructive/20">
         <p className="text-destructive font-bold text-xl">Failed to load AI tasks.</p>
-        <p className="text-destructive/80 mt-2">The backend database might not be seeded yet.</p>
+        <p className="text-destructive/80 mt-2">Could not reach the backend API.</p>
       </div>
     );
   }
 
-  const hasTasks = tasks && tasks.length > 0;
+  const safeTasks = tasks ?? [];
+  const filtered = activeFilter === "all" ? safeTasks : safeTasks.filter((t) => t.category === activeFilter);
 
   return (
-    <div className="flex flex-col gap-12">
-      <motion.div 
+    <div className="flex flex-col gap-10">
+      {/* Hero hook */}
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="bg-card rounded-[2rem] p-8 md:p-12 border-2 border-border shadow-sm flex flex-col md:flex-row items-center gap-8 relative overflow-hidden"
+        className="bg-card rounded-[2rem] p-8 md:p-10 border-2 border-border shadow-sm"
       >
-        <div className="absolute top-0 right-0 w-full md:w-1/2 h-full opacity-20 md:opacity-40 pointer-events-none">
-          <img 
-            src={`${import.meta.env.BASE_URL}images/hero-art.png`} 
-            alt="Abstract art" 
-            className="w-full h-full object-cover mix-blend-multiply" 
-          />
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest mb-5">
+          <Sparkles className="w-3.5 h-3.5" /> Built with AI · Real estimates
         </div>
-        
-        <div className="flex-1 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-widest mb-6">
-            <Sparkles className="w-3.5 h-3.5" /> Real-time Estimate
+
+        <h1 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-3 leading-[1.1]">
+          The true cost of<br />
+          <span className="text-primary">The AI Tab</span>
+        </h1>
+
+        <p className="text-base md:text-lg text-foreground/75 mb-2 max-w-xl font-medium leading-relaxed">
+          This dashboard was built using AI vibe coding with Replit Agent. Generating the code, text, and structure for this page cost approximately:
+        </p>
+
+        <p className="text-xs text-muted-foreground mb-6 max-w-xl leading-relaxed">
+          Estimate based on app-building session data from Luccioni et al. 2023 + EPRI 2024 · Low/high range: 10–200 Wh energy, 500–10,000 mL water
+        </p>
+
+        <div className="flex flex-wrap gap-4 mb-6">
+          <div className="bg-background px-5 py-4 rounded-2xl shadow-sm border border-border flex flex-col gap-1 min-w-[180px]">
+            <div className="flex items-center gap-2 mb-1">
+              <Zap className="w-4 h-4 text-amber-500" />
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Energy Used</span>
+            </div>
+            <span className="text-3xl font-display font-bold text-foreground">
+              ~50 <span className="text-lg text-muted-foreground">Wh</span>
+            </span>
+            <div className="flex items-center gap-1.5 mt-1.5 pt-2 border-t border-border/50 text-xs font-medium text-foreground/65">
+              <Tv className="w-3.5 h-3.5 text-muted-foreground" /> ≈ 60 mins of HD streaming
+            </div>
           </div>
-          <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4 leading-[1.1]">
-            The true cost of<br/>
-            <span className="text-primary">The AI Tab</span>
-          </h1>
-          <p className="text-lg md:text-xl text-foreground/80 mb-8 max-w-xl font-medium leading-relaxed">
-            This dashboard was built using AI vibe coding. Generating the code and text for this exact page cost approximately:
+
+          <div className="bg-background px-5 py-4 rounded-2xl shadow-sm border border-border flex flex-col gap-1 min-w-[180px]">
+            <div className="flex items-center gap-2 mb-1">
+              <Droplets className="w-4 h-4 text-blue-500" />
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Water Used</span>
+            </div>
+            <span className="text-3xl font-display font-bold text-foreground">
+              ~2.5 <span className="text-lg text-muted-foreground">L</span>
+            </span>
+            <div className="flex items-center gap-1.5 mt-1.5 pt-2 border-t border-border/50 text-xs font-medium text-foreground/65">
+              <span>🤲</span> ≈ 23 handwashes worth
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-2 p-3.5 bg-amber-50 border border-amber-200 rounded-xl max-w-xl">
+          <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-800 leading-relaxed">
+            <strong>These are estimates with high uncertainty.</strong> No study has directly measured an agentic coding session like this one. Figures derived by aggregating per-query estimates from published studies.
           </p>
-          
-          <div className="flex flex-wrap gap-4">
-            <div className="bg-background px-6 py-5 rounded-2xl shadow-sm border border-border flex flex-col gap-1 min-w-[200px]">
-              <div className="flex items-center gap-2 text-amber-500 mb-1">
-                <Zap className="w-5 h-5" />
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Energy Used</span>
-              </div>
-              <span className="text-4xl font-display font-bold text-foreground">14.2 <span className="text-xl text-muted-foreground">Wh</span></span>
-              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50 text-sm font-medium text-foreground/70">
-                <Tv className="w-4 h-4 text-muted-foreground" /> ≈ 12 mins of Netflix
-              </div>
-            </div>
-            
-            <div className="bg-background px-6 py-5 rounded-2xl shadow-sm border border-border flex flex-col gap-1 min-w-[200px]">
-              <div className="flex items-center gap-2 text-blue-500 mb-1">
-                <Droplets className="w-5 h-5" />
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Water Used</span>
-              </div>
-              <span className="text-4xl font-display font-bold text-foreground">45 <span className="text-xl text-muted-foreground">mL</span></span>
-              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50 text-sm font-medium text-foreground/70">
-                <span>🚰</span> ≈ 2 sec of washing hands
-              </div>
-            </div>
-          </div>
         </div>
       </motion.div>
 
+      {/* Explorer section */}
       <div>
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-start justify-between mb-2 gap-4 flex-wrap">
           <div>
-            <h2 className="text-3xl font-display font-bold">Explore AI Tasks</h2>
-            <p className="text-muted-foreground font-medium mt-1">Discover the estimated environmental footprint per query.</p>
+            <h2 className="text-2xl font-display font-bold">Explore AI Tasks</h2>
+            <p className="text-sm text-muted-foreground mt-1 max-w-xl leading-relaxed">
+              Estimated environmental footprint per query. All figures show a low–mid–high range. Confidence level reflects how directly the underlying studies measured each task type.
+            </p>
           </div>
         </div>
 
-        {hasTasks ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tasks.map((task, index) => (
+        {/* Data attribution note */}
+        <div className="flex items-start gap-2 p-3 bg-muted/30 border border-border/50 rounded-xl mb-5 mt-3">
+          <BookOpen className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Data sourced from: <strong>Luccioni et al. 2023</strong> (direct GPU measurement, 88 models), <strong>EPRI 2024</strong> (per-query estimates for ChatGPT), <strong>Li et al. 2023</strong> (water modelling), <strong>Fernandez et al. 2025</strong> (video generation). Expand any card to see which specific sources were used.
+          </p>
+        </div>
+
+        {/* Category filter */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {CATEGORY_FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setActiveFilter(f.id)}
+              className={cn(
+                "text-xs font-bold px-3 py-1.5 rounded-full border transition-all",
+                activeFilter === f.id
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {filtered.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {filtered.map((task, index) => (
               <motion.div
                 key={task.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
+                transition={{ duration: 0.35, delay: index * 0.06 }}
               >
                 <TaskCard task={task} />
               </motion.div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-card rounded-3xl border-2 border-dashed border-border">
-            <Leaf className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-bold font-display">No Data Published</h3>
-            <p className="text-muted-foreground">We couldn't find any task data in the system.</p>
+          <div className="text-center py-16 bg-card rounded-3xl border-2 border-dashed border-border">
+            <p className="font-display font-bold text-foreground">No tasks in this category</p>
+            <p className="text-sm text-muted-foreground mt-1">Try selecting a different filter above.</p>
           </div>
         )}
       </div>
