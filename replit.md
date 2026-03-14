@@ -91,6 +91,27 @@ Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used b
 
 Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
 
+### `artifacts/ai-tab` (`@workspace/ai-tab`)
+
+Single-page React + Vite web app visualising real-world energy and water cost of common AI tasks.
+
+**Key design decisions:**
+- Anthropic's own typefaces (Anthropic Sans + Anthropic Serif) loaded from their public Webflow CDN
+- Single-screen layout — no page scrolling; all features accessed via right-side folder tabs
+- Inline sentence dropdown — user switches scenarios by clicking the bold underlined text in the sentence itself (not side pills)
+- Two right-side folder tabs: "compare tasks" (icon infographic panel) + "how to remove the guilt" (green guilt offset panel)
+- "Show me the math" popup per scenario — shows the exact equation, source study, and derivation for both energy and water
+- Compare panel uses a Visual Capitalist–style icon unit chart (not a bar chart); icons color-coded by task
+- Custom calculator mode (in dropdown) — 6 sliders for mixed AI session
+
+**Scenario data:** All estimates traceable to: Luccioni et al. 2023, Li et al. 2023, Fernandez et al. 2025, EPRI 2024, Goldman Sachs 2024, Strubell et al. 2019, IEA 2025. No invented figures.
+
+**Important files:**
+- `artifacts/ai-tab/src/pages/Home.tsx` — entire app
+- `artifacts/ai-tab/src/index.css` — font loading + Tailwind
+- `artifacts/api-server/src/routes/tasks.ts` — task energy/water data
+- `artifacts/api-server/src/routes/sources.ts` — full source database
+
 ### `scripts` (`@workspace/scripts`)
 
 Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
