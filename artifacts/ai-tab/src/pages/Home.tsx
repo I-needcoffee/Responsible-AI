@@ -65,7 +65,10 @@ export const WUE_META: Record<WueTier, { label: string; shortDesc: string; sourc
 // Google 2025 data: 0.10 Wh per median Gemini text prompt (measured, May 2025).
 const TIER_ENERGY: Record<string, Record<ModelTier, number>> = {
   "short-chat":       { research: 0.003, commercial: 0.10,  frontier: 2.9   },
+  "ai-search":        { research: 0.01,  commercial: 0.30,  frontier: 8.7   },
+  "email-reply":      { research: 0.005, commercial: 0.20,  frontier: 3.0   },
   "long-chat":        { research: 0.15,  commercial: 5.0,   frontier: 145   },
+  "meeting-notes":    { research: 0.06,  commercial: 0.70,  frontier: 5.9   },
   "coding":           { research: 0.1,   commercial: 5.0,   frontier: 29    },
   "app-build":        { research: 50,    commercial: 100,   frontier: 1000  },
   "audio-transcript": { research: 0.002, commercial: 0.02,  frontier: 0.1   },
@@ -96,6 +99,21 @@ const TIER_SOURCE: Record<string, Record<ModelTier, string>> = {
     research:   "Luccioni et al. 2023: speech recognition at 0.001–0.01 Wh/min. Mid: 0.002 Wh/min.",
     commercial: "Scaled estimate: commercial transcription (Whisper large, Deepgram) ~10× small model. No direct Google 2025 data for audio transcription tasks.",
     frontier:   "Estimated upper bound. Limited peer-reviewed data for commercial transcription services.",
+  },
+  "ai-search": {
+    research:   "Estimated lower bound for a small-model RAG pipeline: 0.01 Wh. Much lower than commercial AI search as it assumes efficient local models.",
+    commercial: "Google Cloud 2025 basis, scaled for multi-step processing. AI search (Perplexity, Google AI Overviews, Bing Copilot) performs 3+ model passes — query embedding, source retrieval, and synthesis. Estimate: 0.10 Wh × 3 ≈ 0.30 Wh. No direct measurement published for AI search products.",
+    frontier:   "Estimated at ~3× EPRI's full ChatGPT query estimate (2.9 Wh × 3 ≈ 8.7 Wh). Upper bound for frontier-model RAG with multiple retrieval rounds.",
+  },
+  "email-reply": {
+    research:   "Estimated: local embedding search (< 0.001 Wh) + small-model draft (0.003 Wh) ≈ 0.005 Wh.",
+    commercial: "Google Cloud 2025 basis: one semantic search/classification pass (~0.10 Wh) + one reply generation (~0.10 Wh) = ~0.20 Wh. Covers tools like Gmail Smart Reply, Copilot for Outlook, or asking an AI assistant to draft a response.",
+    frontier:   "EPRI 2024 basis: full thread processing + long-form draft ≈ 3.0 Wh. Upper bound for frontier models with extended email context windows.",
+  },
+  "meeting-notes": {
+    research:   "Luccioni 2023 audio rate (0.002 Wh/min × 30 min) = 0.06 Wh. Small models only, no summarization included.",
+    commercial: "Google Cloud 2025 basis: continuous transcription (~0.02 Wh/min × 30 min = 0.60 Wh) + one end-of-meeting summary generation (0.10 Wh) ≈ 0.70 Wh. Covers tools like Otter.ai, Fireflies.ai, and Copilot for Teams. No direct measurement published.",
+    frontier:   "EPRI 2024 basis: commercial transcription rate (~0.10 Wh/min × 30 min = 3.0 Wh) + frontier-model summary (2.9 Wh) ≈ 5.9 Wh. Upper bound for meeting AI using frontier LLMs.",
   },
 };
 
@@ -129,6 +147,26 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
+    id: "ai-search", verb: "Doing", dropdownText: "an AI web search", dropdownLabel: "an AI web search",
+    clarifying: "One AI-powered search query — Perplexity, Google AI Overviews, or Bing Copilot. These make 3+ model passes: understanding your query, retrieving sources, and synthesizing an answer — which is why they use more than a single chat message.",
+    baseEnergyWh: 0.01, energyLow: 0.01, energyHigh: 8.7, baseWaterMl: 0.01 * 3.45,
+    confidence: "low", tierSensitive: true,
+    math: {
+      energy: { equation: "Energy = ~3 model passes × [energy per pass]", sourceName: "Estimated — Google Cloud 2025 basis · EPRI 2024 (high)", derivation: "AI search involves query embedding, document retrieval, and synthesis — modelled as 3× a standard chat query. No direct peer-reviewed measurement of AI search products exists.", tierSource: TIER_SOURCE["ai-search"] },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Derived from WUE methodology. Average (0.30 Wh × 3.45 mL/Wh = 1 mL). Efficient DC: 0.30 × 1.2 = 0.36 mL." },
+    },
+  },
+  {
+    id: "email-reply", verb: "Drafting", dropdownText: "an AI email reply", dropdownLabel: "an AI email reply",
+    clarifying: "AI reads your email thread and drafts a reply — like Gmail Smart Reply, Copilot in Outlook, or asking an AI assistant to write a specific response. One of the more lightweight everyday AI tasks.",
+    baseEnergyWh: 0.005, energyLow: 0.005, energyHigh: 3.0, baseWaterMl: 0.005 * 3.45,
+    confidence: "low", tierSensitive: true,
+    math: {
+      energy: { equation: "Energy = 1 context read + 1 reply generation", sourceName: "Estimated — Google Cloud 2025 basis · EPRI 2024 (high)", derivation: "Modelled as semantic search over the thread + one text generation call.", tierSource: TIER_SOURCE["email-reply"] },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Average (0.20 Wh × 3.45 mL/Wh ≈ 0.7 mL). One of the lower-impact everyday AI tasks." },
+    },
+  },
+  {
     id: "long-chat", verb: "Having", dropdownText: "a long AI conversation", dropdownLabel: "a long AI conversation",
     clarifying: "A 20–50 message back-and-forth session. At the Average estimate (Google 2025), each message costs 0.10 Wh. At the High estimate, 50 messages × 2.9 Wh = 145 Wh, which × 3.45 mL/Wh exactly matches Li et al.'s direct measurement of 500 mL.",
     baseEnergyWh: 0.15, energyLow: 0.15, energyHigh: 145, baseWaterMl: 0.15 * 3.45,
@@ -136,6 +174,16 @@ const SCENARIOS: Scenario[] = [
     math: {
       energy: { equation: "Energy = 50 messages × [energy per message]", sourceName: "Luccioni 2023 · Google Cloud 2025 · EPRI 2024", derivation: "A long conversation is modelled as 50 AI interactions.", tierSource: TIER_SOURCE["long-chat"] },
       water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 (WUE methodology)", derivation: "At the High energy estimate with Typical WUE: 145 Wh × 3.45 mL/Wh = 500 mL — exactly matching Li et al.'s direct measurement for a 50-message ChatGPT conversation. ✓" },
+    },
+  },
+  {
+    id: "meeting-notes", verb: "Taking", dropdownText: "AI meeting notes (30 min)", dropdownLabel: "AI meeting notes",
+    clarifying: "30 minutes of real-time transcription plus an end-of-meeting summary. Combines continuous audio processing with one full generation call. Tools like Otter.ai, Fireflies.ai, or Microsoft Copilot for Teams.",
+    baseEnergyWh: 0.06, energyLow: 0.06, energyHigh: 5.9, baseWaterMl: 0.06 * 3.45,
+    confidence: "low", tierSensitive: true,
+    math: {
+      energy: { equation: "Energy = transcription (30 min) + 1 summary generation", sourceName: "Estimated — Luccioni 2023 (low) · Google Cloud 2025 basis (avg) · EPRI 2024 (high)", derivation: "Combines continuous audio transcription with a one-shot end-of-meeting summarization pass.", tierSource: TIER_SOURCE["meeting-notes"] },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Average (0.70 Wh × 3.45 mL/Wh ≈ 2.4 mL). Comparable to a single chat message per minute of meeting." },
     },
   },
   {
@@ -840,93 +888,110 @@ export default function Home() {
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
 
-      <div className="flex-1 flex items-center justify-center px-6 md:px-16 relative min-h-0">
-        <AnimatePresence mode="wait">
-          <motion.div key={selectedId + tier + wueTier}
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="flex flex-col items-center gap-5 w-full max-w-xl">
+      {/* Scrollable center — centers when content fits, scrolls on small screens */}
+      <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex items-center justify-center min-h-full relative px-4 sm:px-8 md:px-16 py-5">
+          <AnimatePresence mode="wait">
+            <motion.div key={selectedId + tier + wueTier}
+              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="flex flex-col items-center gap-3 md:gap-5 w-full max-w-xl">
 
-            {isCustom ? (
-              <div className="w-full">
-                <p className="text-center text-xs text-gray-400 mb-5">
-                  Scenario: <InlineDropdown value={selectedId} onChange={setSelectedId} />
-                </p>
-                <CustomCalculator
-                  counts={customCounts}
-                  onChange={handleCustomChange}
-                  totalE={customTotalE}
-                  totalW={customTotalW}
-                />
-              </div>
-            ) : scenario ? (
-              <>
-                {/* Line 1: dropdown on its own line */}
-                <InlineDropdown value={selectedId} onChange={setSelectedId} />
+              {isCustom ? (
+                <div className="w-full">
+                  <p className="text-center text-xs text-gray-400 mb-4">
+                    Scenario: <InlineDropdown value={selectedId} onChange={setSelectedId} />
+                  </p>
+                  <CustomCalculator
+                    counts={customCounts}
+                    onChange={handleCustomChange}
+                    totalE={customTotalE}
+                    totalW={customTotalW}
+                  />
+                </div>
+              ) : scenario ? (
+                <>
+                  {/* Line 1: dropdown */}
+                  <InlineDropdown value={selectedId} onChange={setSelectedId} />
 
-                {/* Line 2: data sentence — values wrapped with nowrap to prevent mid-value line breaks */}
-                <p className="text-[1.5rem] md:text-[1.65rem] leading-[1.55] text-black text-center -mt-1"
-                  style={{ fontFamily: "'Anthropic Serif', serif" }}>
-                  used{" "}
-                  <strong style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtEnergy(energyWh)}</strong>
-                  {" "}of energy and{" "}
-                  <strong style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtWater(waterMl)}</strong>
-                  {" "}of water.
-                </p>
+                  {/* Line 2: data sentence */}
+                  <p className="text-[1.15rem] sm:text-[1.35rem] md:text-[1.65rem] leading-[1.5] text-black text-center -mt-1"
+                    style={{ fontFamily: "'Anthropic Serif', serif" }}>
+                    used{" "}
+                    <strong style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtEnergy(energyWh)}</strong>
+                    {" "}of energy and{" "}
+                    <strong style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtWater(waterMl)}</strong>
+                    {" "}of water.
+                  </p>
 
-                {/* Equivalent */}
-                <p className="text-base md:text-[1.05rem] leading-[1.7] text-gray-500 text-center -mt-1"
-                  style={{ fontFamily: "'Anthropic Serif', serif" }}>
-                  That's {equivEnergy(energyWh)} and {equivWater(waterMl)}.
-                </p>
+                  {/* Equivalent */}
+                  <p className="text-sm md:text-[1.05rem] leading-[1.7] text-gray-500 text-center -mt-1"
+                    style={{ fontFamily: "'Anthropic Serif', serif" }}>
+                    That's {equivEnergy(energyWh)} and {equivWater(waterMl)}.
+                  </p>
 
-                {/* Dual selectors */}
-                <EstimateSelectors tier={tier} wueTier={wueTier} onTierChange={setTier} onWueTierChange={setWueTier} />
+                  {/* Dual selectors */}
+                  <EstimateSelectors tier={tier} wueTier={wueTier} onTierChange={setTier} onWueTierChange={setWueTier} />
 
-                {/* Fine print */}
-                <p className="text-xs text-gray-400 font-light leading-relaxed text-center italic max-w-xs">
-                  {scenario.clarifying}{" "}
-                  <button onClick={() => setShowMath(true)} className="underline underline-offset-2 hover:text-black transition-colors not-italic">
-                    Show me the math →
-                  </button>
-                </p>
-              </>
-            ) : null}
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Dark right tabs */}
-        <div className="hidden md:flex fixed right-0 top-1/2 -translate-y-1/2 flex-col gap-3 z-30">
-          <AnimatePresence>
-            {!showCompare && (
-              <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}>
-                <SideTab onClick={() => setShowCompare(true)} label="compare tasks" bg="#333333" icon={<BarChart2 size={15} color="rgba(255,255,255,0.85)" />} />
-              </motion.div>
-            )}
+                  {/* Fine print */}
+                  <p className="text-[11px] md:text-xs text-gray-400 font-light leading-relaxed text-center italic max-w-xs">
+                    {scenario.clarifying}{" "}
+                    <button onClick={() => setShowMath(true)} className="underline underline-offset-2 hover:text-black transition-colors not-italic">
+                      Show me the math →
+                    </button>
+                  </p>
+                </>
+              ) : null}
+            </motion.div>
           </AnimatePresence>
-          <AnimatePresence>
-            {!showAction && (
-              <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}>
-                <SideTab onClick={() => setShowAction(true)} label="take action" bg="#333333" icon={<Sparkles size={15} color="rgba(255,255,255,0.85)" />} />
-              </motion.div>
-            )}
-          </AnimatePresence>
+
+          {/* Desktop-only side tabs */}
+          <div className="hidden md:flex fixed right-0 top-1/2 -translate-y-1/2 flex-col gap-3 z-30">
+            <AnimatePresence>
+              {!showCompare && (
+                <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}>
+                  <SideTab onClick={() => setShowCompare(true)} label="compare tasks" bg="#333333" icon={<BarChart2 size={15} color="rgba(255,255,255,0.85)" />} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <AnimatePresence>
+              {!showAction && (
+                <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}>
+                  <SideTab onClick={() => setShowAction(true)} label="take action" bg="#333333" icon={<Sparkles size={15} color="rgba(255,255,255,0.85)" />} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
-      {/* Bottom bar */}
-      <div className="flex-shrink-0 flex items-center justify-between px-6 md:px-10 py-4 border-t border-gray-100">
-        <button onClick={() => setShowSources(true)}
-          className="text-xs font-medium text-gray-600 hover:text-black transition-colors border border-gray-300 hover:border-gray-600 rounded-full px-5 py-2 shadow-sm hover:shadow-md">
-          Sources & methodology
-        </button>
-        <div className="flex gap-2 md:hidden">
-          <button onClick={() => setShowCompare(true)} className="text-xs text-gray-600 border border-gray-300 rounded-full px-4 py-2 font-medium">compare</button>
-          <button onClick={() => setShowAction(true)} className="text-xs text-gray-600 border border-gray-300 rounded-full px-4 py-2 font-medium">take action</button>
+      {/* Bottom bar — three evenly spaced buttons on mobile, left+right layout on desktop */}
+      <div className="flex-shrink-0 border-t border-gray-100 px-3 md:px-10 py-3 md:py-4">
+        {/* Mobile: three pill buttons side by side */}
+        <div className="flex md:hidden items-center gap-2 justify-between">
+          <button onClick={() => setShowSources(true)}
+            className="flex-1 text-xs font-medium text-gray-600 border border-gray-300 rounded-full px-3 py-2 text-center">
+            Sources
+          </button>
+          <button onClick={() => setShowCompare(true)}
+            className="flex-1 text-xs font-medium text-gray-600 border border-gray-300 rounded-full px-3 py-2 text-center">
+            Compare
+          </button>
+          <button onClick={() => setShowAction(true)}
+            className="flex-1 text-xs font-medium text-gray-600 border border-gray-300 rounded-full px-3 py-2 text-center">
+            Take action
+          </button>
         </div>
-        <p className="hidden md:block text-[10px] text-gray-300 italic font-light text-right max-w-[220px] leading-relaxed">
-          Varies by model, data center & region. Average energy = Google Cloud 2025.
-        </p>
+        {/* Desktop: sources left, info text right */}
+        <div className="hidden md:flex items-center justify-between">
+          <button onClick={() => setShowSources(true)}
+            className="text-xs font-medium text-gray-600 hover:text-black transition-colors border border-gray-300 hover:border-gray-600 rounded-full px-5 py-2 shadow-sm hover:shadow-md">
+            Sources & methodology
+          </button>
+          <p className="text-[10px] text-gray-300 italic font-light text-right max-w-[220px] leading-relaxed">
+            Varies by model, data center & region. Average energy = Google Cloud 2025.
+          </p>
+        </div>
       </div>
 
       <AnimatePresence>
