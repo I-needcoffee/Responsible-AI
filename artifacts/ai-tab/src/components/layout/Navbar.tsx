@@ -19,7 +19,7 @@ export function Navbar() {
           <div className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-display font-bold text-xl group-hover:rotate-12 transition-transform shadow-sm">
             *
           </div>
-          <span className="font-display font-bold text-2xl tracking-tight text-foreground">The AI Tab</span>
+          <span className="font-display font-bold text-2xl tracking-tight text-foreground">AI Environmental Impact</span>
         </Link>
         <nav className="hidden md:flex items-center gap-1 bg-card p-1 rounded-full border border-border shadow-sm">
           {navLinks.map(link => {
