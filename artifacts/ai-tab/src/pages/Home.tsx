@@ -5,39 +5,39 @@ import { useSources } from "@/hooks/use-sources";
 
 // ─── ENERGY ESTIMATE TIERS ───────────────────────────────────────────────────
 // Three separate published estimates — chosen independently of water location.
-// "Low"     = Luccioni et al. 2023: direct GPU measurement on small open-source models
-// "Average" = Google Cloud 2025: direct measurement, median Gemini text prompt, May 2025
-// "High"    = EPRI 2024: estimated for ChatGPT on Azure GPU infrastructure
+// "Light"     = Luccioni et al. 2023: direct GPU measurement on small open-source models
+// "Standard"  = Google Cloud 2025: comprehensive measurement, median Gemini prompt, Aug 2025
+// "Intensive" = EPRI 2024: estimated for ChatGPT on Azure GPU infrastructure (GPU-heavy workloads)
 export type ModelTier = "research" | "commercial" | "frontier";
 
 export const TIER_META: Record<ModelTier, { rangeLabel: string; rangeDesc: string; source: string }> = {
   research: {
-    rangeLabel: "Low",
-    rangeDesc: "Measured directly on small open-source AI models (BLOOM, OPT, Stable Diffusion). Closest to local/self-hosted AI tools.",
+    rangeLabel: "Light",
+    rangeDesc: "Measured directly on small open-source AI models (BLOOM, OPT, Stable Diffusion). Closest to local/self-hosted AI tools and lightweight, task-specific models.",
     source: "Luccioni et al. 2023",
   },
   commercial: {
-    rangeLabel: "Average",
-    rangeDesc: "Direct measurement for Google's Gemini App. A median Gemini text prompt used 0.10 Wh (May 2025). Represents current efficient commercial AI.",
-    source: "Google Cloud 2025",
+    rangeLabel: "Standard",
+    rangeDesc: "Comprehensive measurement across Google's full Gemini App infrastructure (Aug 2025 paper, arXiv:2508.15734). Covers active AI chips, host CPU, cooling overhead, and idle provisioning. A median Gemini text prompt: 0.24 Wh and 0.26 mL. Google explicitly notes the older 0.10 Wh figure 'substantially underestimates' the real footprint.",
+    source: "Google Cloud 2025 (Aug)",
   },
   frontier: {
-    rangeLabel: "High",
-    rangeDesc: "Estimated for ChatGPT-class models on GPU infrastructure. Goldman Sachs (2024): AI uses ~10× more than a Google Search (0.3 Wh × 10 ≈ 3 Wh). EPRI 2024 full ChatGPT query estimate (2.9 Wh) aligns with this.",
-    source: "EPRI 2024 / Goldman Sachs 2024",
+    rangeLabel: "Intensive",
+    rangeDesc: "Demanding AI tasks and older frontier models. EPRI 2024 estimate for ChatGPT on Azure GPU infrastructure: 2.9 Wh — consistent with Li et al.'s direct water measurement for a 50-message session. OpenAI's o3 reasoning model reaches ~3.9 Wh (Jegham et al. 2025). Note: modern GPT-4o is now ~0.34 Wh (Sam Altman, Jun 2025) — nearly Standard-tier.",
+    source: "EPRI 2024 · Jegham et al. 2025",
   },
 };
 
 // ─── WATER LOCATION (WUE) TIERS ──────────────────────────────────────────────
 // Water Use Effectiveness (WUE) varies by data center location and cooling type.
 // This is independent of energy — different providers use different infrastructure.
-// Google 2025: 0.12 mL / 0.10 Wh = 1.2 mL/Wh (efficient TPU DCs, renewable, cold climate)
+// Google Cloud 2025 (Aug): 0.26 mL / 0.24 Wh ≈ 1.1 mL/Wh (efficient TPU DCs, renewable, cold climate)
 // Li et al. 2023: calibrated 3.45 mL/Wh for Microsoft/OpenAI Azure infra (US commercial avg)
 // IEA 2024: up to 6 mL/Wh for hot-climate evaporative cooling data centers
 export type WueTier = "efficient" | "average" | "intensive";
 
 export const WUE_VALUES: Record<WueTier, number> = {
-  efficient: 1.2,   // Google Cloud 2025: 0.12 mL / 0.10 Wh = 1.2 mL/Wh
+  efficient: 1.1,   // Google Cloud 2025 (Aug comprehensive): 0.26 mL / 0.24 Wh ≈ 1.1 mL/Wh
   average:   3.45,  // Li et al. 2023 calibration (ChatGPT/Microsoft Azure, US avg)
   intensive: 6.0,   // IEA 2024 upper: hot climate, evaporative cooling
 };
@@ -45,8 +45,8 @@ export const WUE_VALUES: Record<WueTier, number> = {
 export const WUE_META: Record<WueTier, { label: string; shortDesc: string; source: string }> = {
   efficient: {
     label: "Efficient",
-    shortDesc: "Google-class data centers — custom TPUs, renewable energy, cold climate. Measured WUE: 1.2 mL/Wh (Google 2025).",
-    source: "Google Cloud 2025",
+    shortDesc: "Google-class data centers — custom TPUs, renewable energy, cold climate. Measured WUE: 1.1 mL/Wh (Google Aug 2025: 0.26 mL per 0.24 Wh prompt).",
+    source: "Google Cloud 2025 (Aug)",
   },
   average: {
     label: "Typical",
@@ -62,57 +62,57 @@ export const WUE_META: Record<WueTier, { label: string; shortDesc: string; sourc
 
 // ─── ENERGY VALUES BY TASK AND TIER ──────────────────────────────────────────
 // Tier-invariant tasks (image, video, training-llm) use base values directly.
-// Google 2025 data: 0.10 Wh per median Gemini text prompt (measured, May 2025).
+// Google Cloud 2025 (Aug): 0.24 Wh per median Gemini text prompt (comprehensive measurement).
 const TIER_ENERGY: Record<string, Record<ModelTier, number>> = {
-  "short-chat":    { research: 0.003, commercial: 0.10,  frontier: 2.9   },
-  "email-reply":   { research: 0.005, commercial: 0.20,  frontier: 3.0   },
-  "ai-search":     { research: 0.01,  commercial: 0.30,  frontier: 8.7   },
-  "inbox-search":  { research: 0.03,  commercial: 0.50,  frontier: 5.0   },
-  "meeting-notes": { research: 0.06,  commercial: 0.70,  frontier: 5.9   },
-  "long-chat":     { research: 0.15,  commercial: 5.0,   frontier: 145   },
-  "coding":        { research: 0.1,   commercial: 5.0,   frontier: 29    },
-  "app-build":     { research: 50,    commercial: 100,   frontier: 1000  },
+  "short-chat":    { research: 0.003, commercial: 0.24,  frontier: 2.9   },
+  "email-reply":   { research: 0.005, commercial: 0.50,  frontier: 3.0   },
+  "ai-search":     { research: 0.01,  commercial: 0.72,  frontier: 8.7   },
+  "inbox-search":  { research: 0.03,  commercial: 1.20,  frontier: 5.0   },
+  "meeting-notes": { research: 0.06,  commercial: 1.70,  frontier: 5.9   },
+  "long-chat":     { research: 0.15,  commercial: 12.0,  frontier: 145   },
+  "coding":        { research: 0.1,   commercial: 12.0,  frontier: 29    },
+  "app-build":     { research: 50,    commercial: 240,   frontier: 1000  },
 };
 
 const TIER_SOURCE: Record<string, Record<ModelTier, string>> = {
   "short-chat": {
     research:   "Luccioni et al. 2023 — direct GPU measurement on open-source text models. Range: 0.001–0.01 Wh per query.",
-    commercial: "Google Cloud 2025 — direct measurement. A median Gemini App text-generation prompt uses 0.10 Wh of energy and 0.12 mL of water (data from May 2025). Google's TPU infrastructure (Trillium/Ironwood) is among the most energy-efficient for AI inference. Note: ChatGPT and Claude running on Nvidia GPU infrastructure will use more — see the High estimate for that range.",
-    frontier:   "EPRI 2024 / Goldman Sachs 2024 — estimated for ChatGPT on Azure (GPU infrastructure). EPRI's full ChatGPT query estimate: 2.9 Wh. Goldman Sachs (2024): AI uses ~10× more than a Google Search (0.3 Wh × 10 ≈ 3 Wh). Both consistent.",
+    commercial: "Google Cloud 2025 (Aug) — comprehensive measurement (arXiv:2508.15734). A median Gemini App text-generation prompt uses 0.24 Wh and 0.26 mL. Covers active AI chips, host CPU, cooling overhead, and idle provisioning. Google's earlier 0.10 Wh figure (May 2025) counted only active GPU/TPU — the Aug paper explicitly notes that figure 'substantially underestimates' the real footprint.",
+    frontier:   "EPRI 2024 — estimated for ChatGPT on Azure (GPU infrastructure). EPRI's full ChatGPT query estimate: 2.9 Wh. Consistent with Li et al. cross-check: 50 messages × 2.9 Wh × 3.45 mL/Wh = 500 mL (matches Li et al. direct measurement). Note: modern GPT-4o is ~0.34 Wh (Sam Altman, Jun 2025); o3 reasoning reaches ~3.9 Wh (Jegham et al. 2025).",
   },
   "long-chat": {
     research:   "Luccioni et al. 2023 scaled: 50 messages × 0.003 Wh = 0.15 Wh.",
-    commercial: "Google Cloud 2025 scaled: 50 messages × 0.10 Wh per Gemini prompt = 5 Wh.",
+    commercial: "Google Cloud 2025 (Aug) scaled: 50 messages × 0.24 Wh per Gemini prompt = 12.0 Wh.",
     frontier:   "EPRI 2024 scaled: 50 messages × 2.9 Wh = 145 Wh. Cross-check: 145 Wh × 3.45 mL/Wh = 500 mL = Li et al.'s direct measurement for a 50-message ChatGPT session. ✓",
   },
   "coding": {
     research:   "Luccioni et al. 2023: code completions at ~0.001 Wh each × 100 = 0.1 Wh.",
-    commercial: "Google Cloud 2025 scaled: 100 code completions × ~0.05 Wh = 5 Wh. Code completions are typically shorter than full chat prompts, so scaled at 50% of the full text prompt estimate.",
+    commercial: "Google Cloud 2025 (Aug) scaled: 100 code completions × ~0.12 Wh = 12.0 Wh. Code completions are typically shorter than full chat prompts, so scaled at 50% of the full text prompt estimate (0.24 Wh × 0.5 = 0.12 Wh each).",
     frontier:   "EPRI 2024 scaled: 100 × 0.29 Wh = 29 Wh (upper bound — code assistant models are typically more efficient than full GPT-4).",
   },
   "app-build": {
     research:   "Modelled: ~1,000 small model calls (Luccioni 2023 baseline, 0.05 Wh avg) = 50 Wh.",
-    commercial: "Google Cloud 2025 scaled: ~1,000 AI interactions × 0.10 Wh = 100 Wh. Represents an app-building session using Gemini-class efficient models.",
+    commercial: "Google Cloud 2025 (Aug) scaled: ~1,000 AI interactions × 0.24 Wh = 240 Wh. Represents an app-building session using Gemini-class efficient models.",
     frontier:   "EPRI 2024 scaled: ~500 interactions × 2 Wh avg = 1,000 Wh. Upper bound — coding assistants typically use specialized models, not full frontier LLMs.",
   },
   "inbox-search": {
     research:   "Estimated: batch embedding lookups over ~100 emails (0.001 Wh each) + small-model analysis ≈ 0.03 Wh. Local or on-device models only.",
-    commercial: "Google Cloud 2025 basis: semantic search over inbox (~0.30 Wh for 3 retrieval passes) + one synthesis/summary generation (0.20 Wh) ≈ 0.50 Wh. Covers tools like Gmail AI search, Copilot for Outlook, or asking an AI assistant to find and analyze email history.",
+    commercial: "Google Cloud 2025 (Aug) basis: semantic search over inbox (~0.72 Wh for 3 retrieval passes × 0.24 Wh) + one synthesis/summary generation (0.48 Wh) ≈ 1.20 Wh. Covers tools like Gmail AI search, Copilot for Outlook, or asking an AI assistant to find and analyze email history.",
     frontier:   "EPRI 2024 basis: full inbox processing with a frontier LLM reading many email threads (multiple calls ≈ 5.0 Wh). Upper bound for frontier models analyzing large email corpora.",
   },
   "ai-search": {
     research:   "Estimated lower bound for a small-model RAG pipeline: 0.01 Wh. Much lower than commercial AI search as it assumes efficient local models.",
-    commercial: "Google Cloud 2025 basis, scaled for multi-step processing. AI search (Perplexity, Google AI Overviews, Bing Copilot) performs 3+ model passes — query embedding, source retrieval, and synthesis. Estimate: 0.10 Wh × 3 ≈ 0.30 Wh. No direct measurement published for AI search products.",
+    commercial: "Google Cloud 2025 (Aug) basis, scaled for multi-step processing. AI search (Perplexity, Google AI Overviews, Bing Copilot) performs 3+ model passes — query embedding, source retrieval, and synthesis. Estimate: 0.24 Wh × 3 = 0.72 Wh. No direct measurement published for AI search products.",
     frontier:   "Estimated at ~3× EPRI's full ChatGPT query estimate (2.9 Wh × 3 ≈ 8.7 Wh). Upper bound for frontier-model RAG with multiple retrieval rounds.",
   },
   "email-reply": {
     research:   "Estimated: local embedding search (< 0.001 Wh) + small-model draft (0.003 Wh) ≈ 0.005 Wh.",
-    commercial: "Google Cloud 2025 basis: one semantic search/classification pass (~0.10 Wh) + one reply generation (~0.10 Wh) = ~0.20 Wh. Covers tools like Gmail Smart Reply, Copilot for Outlook, or asking an AI assistant to draft a response.",
+    commercial: "Google Cloud 2025 (Aug) basis: one semantic search/classification pass (~0.24 Wh) + one reply generation (~0.24 Wh) ≈ 0.50 Wh. Covers tools like Gmail Smart Reply, Copilot for Outlook, or asking an AI assistant to draft a response.",
     frontier:   "EPRI 2024 basis: full thread processing + long-form draft ≈ 3.0 Wh. Upper bound for frontier models with extended email context windows.",
   },
   "meeting-notes": {
     research:   "Luccioni 2023 audio rate (0.002 Wh/min × 30 min) = 0.06 Wh. Small models only, no summarization included.",
-    commercial: "Google Cloud 2025 basis: continuous transcription (~0.02 Wh/min × 30 min = 0.60 Wh) + one end-of-meeting summary generation (0.10 Wh) ≈ 0.70 Wh. Covers tools like Otter.ai, Fireflies.ai, and Copilot for Teams. No direct measurement published.",
+    commercial: "Google Cloud 2025 (Aug) basis: continuous transcription (~0.047 Wh/min × 30 min ≈ 1.40 Wh) + one end-of-meeting summary generation (0.24 Wh) ≈ 1.70 Wh. Covers tools like Otter.ai, Fireflies.ai, and Copilot for Teams. No direct measurement published.",
     frontier:   "EPRI 2024 basis: commercial transcription rate (~0.10 Wh/min × 30 min = 3.0 Wh) + frontier-model summary (2.9 Wh) ≈ 5.9 Wh. Upper bound for meeting AI using frontier LLMs.",
   },
 };
@@ -139,12 +139,12 @@ interface Scenario {
 const SCENARIOS: Scenario[] = [
   {
     id: "short-chat", verb: "Sending", dropdownText: "a short chat message", dropdownLabel: "a short chat message",
-    clarifying: "One short message to an AI assistant. Low-impact individually, but billions happen daily. Google measured a median Gemini prompt at 0.10 Wh and 0.12 mL — select 'Average' to see this figure.",
+    clarifying: "One short message to an AI assistant. Low-impact individually, but billions happen daily. Google's comprehensive Aug 2025 measurement: 0.24 Wh and 0.26 mL per median Gemini prompt — select 'Standard' to see this figure.",
     baseEnergyWh: 0.003, energyLow: 0.003, energyHigh: 2.9, baseWaterMl: 0.003 * 3.45,
     confidence: "high", tierSensitive: true,
     math: {
       energy: { equation: "Energy = 1 query × [energy per query, by estimate]", sourceName: "Luccioni 2023 · Google Cloud 2025 · EPRI 2024 / Goldman Sachs 2024", derivation: "Select an estimate range to see the source-specific derivation.", tierSource: TIER_SOURCE["short-chat"] },
-      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024 — see Water Location selector", derivation: "Google Cloud 2025 directly measured 0.12 mL per median Gemini prompt (with 0.10 Wh energy → WUE = 1.2 mL/Wh). Li et al. (2023) calibrated WUE = 3.45 mL/Wh for Microsoft/Azure ChatGPT infrastructure. Select a Water Location to choose the relevant data center type." },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 (Aug) · Li et al. 2023 · IEA 2024 — see Water Location selector", derivation: "Google Cloud 2025 (Aug) comprehensively measured 0.26 mL per median Gemini prompt (with 0.24 Wh energy → WUE ≈ 1.1 mL/Wh). Li et al. (2023) calibrated WUE = 3.45 mL/Wh for Microsoft/Azure ChatGPT infrastructure. Select a Water Location to choose the relevant data center type." },
     },
   },
   {
@@ -154,7 +154,7 @@ const SCENARIOS: Scenario[] = [
     confidence: "low", tierSensitive: true,
     math: {
       energy: { equation: "Energy = 1 context read + 1 reply generation", sourceName: "Estimated — Google Cloud 2025 basis · EPRI 2024 (high)", derivation: "Modelled as semantic search over the thread + one text generation call.", tierSource: TIER_SOURCE["email-reply"] },
-      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Average (0.20 Wh × 3.45 mL/Wh ≈ 0.7 mL). One of the lower-impact everyday AI tasks." },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 (Aug) · Li et al. 2023 · IEA 2024", derivation: "Standard (0.50 Wh × 3.45 mL/Wh ≈ 1.7 mL). One of the lighter everyday AI tasks." },
     },
   },
   {
@@ -164,7 +164,7 @@ const SCENARIOS: Scenario[] = [
     confidence: "low", tierSensitive: true,
     math: {
       energy: { equation: "Energy = ~3 model passes × [energy per pass]", sourceName: "Estimated — Google Cloud 2025 basis · EPRI 2024 (high)", derivation: "AI search involves query embedding, document retrieval, and synthesis — modelled as 3× a standard chat query. No direct peer-reviewed measurement of AI search products exists.", tierSource: TIER_SOURCE["ai-search"] },
-      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Derived from WUE methodology. Average (0.30 Wh × 3.45 mL/Wh = 1 mL). Efficient DC: 0.30 × 1.2 = 0.36 mL." },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 (Aug) · Li et al. 2023 · IEA 2024", derivation: "Derived from WUE methodology. Standard (0.72 Wh × 3.45 mL/Wh ≈ 2.5 mL). Efficient DC: 0.72 × 1.1 = 0.79 mL." },
     },
   },
   {
@@ -173,8 +173,8 @@ const SCENARIOS: Scenario[] = [
     baseEnergyWh: 0.03, energyLow: 0.03, energyHigh: 5.0, baseWaterMl: 0.03 * 3.45,
     confidence: "low", tierSensitive: true,
     math: {
-      energy: { equation: "Energy = inbox retrieval passes + 1 synthesis generation", sourceName: "Estimated — Google Cloud 2025 basis · EPRI 2024 (high)", derivation: "Modelled as 3 semantic retrieval passes over email history (~0.30 Wh) plus one synthesis/summary generation (0.20 Wh) ≈ 0.50 Wh at commercial tier.", tierSource: TIER_SOURCE["inbox-search"] },
-      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Average (0.50 Wh × 3.45 mL/Wh ≈ 1.7 mL). More costly than a single email reply because of multi-pass retrieval." },
+      energy: { equation: "Energy = inbox retrieval passes + 1 synthesis generation", sourceName: "Estimated — Google Cloud 2025 (Aug) basis · EPRI 2024 (intensive)", derivation: "Modelled as 3 semantic retrieval passes over email history (~0.72 Wh) plus one synthesis/summary generation (0.48 Wh) ≈ 1.20 Wh at standard tier.", tierSource: TIER_SOURCE["inbox-search"] },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 (Aug) · Li et al. 2023 · IEA 2024", derivation: "Standard (1.20 Wh × 3.45 mL/Wh ≈ 4.1 mL). More costly than a single email reply because of multi-pass retrieval." },
     },
   },
   {
@@ -184,7 +184,7 @@ const SCENARIOS: Scenario[] = [
     confidence: "low", tierSensitive: true,
     math: {
       energy: { equation: "Energy = transcription (30 min) + 1 summary generation", sourceName: "Estimated — Luccioni 2023 (low) · Google Cloud 2025 basis (avg) · EPRI 2024 (high)", derivation: "Combines continuous audio transcription with a one-shot end-of-meeting summarization pass.", tierSource: TIER_SOURCE["meeting-notes"] },
-      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Average (0.70 Wh × 3.45 mL/Wh ≈ 2.4 mL). Comparable to a single chat message per minute of meeting." },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 (Aug) · Li et al. 2023 · IEA 2024", derivation: "Standard (1.70 Wh × 3.45 mL/Wh ≈ 5.9 mL). Driven by continuous transcription across the meeting duration." },
     },
   },
   {
@@ -200,7 +200,7 @@ const SCENARIOS: Scenario[] = [
   },
   {
     id: "long-chat", verb: "Having", dropdownText: "a long AI conversation", dropdownLabel: "a long AI conversation",
-    clarifying: "A 20–50 message back-and-forth session. At the Average estimate (Google 2025), each message costs 0.10 Wh. At the High estimate, 50 messages × 2.9 Wh = 145 Wh, which × 3.45 mL/Wh exactly matches Li et al.'s direct measurement of 500 mL.",
+    clarifying: "A 20–50 message back-and-forth session. At the Standard estimate (Google 2025), each message costs 0.24 Wh. At the Intensive estimate, 50 messages × 2.9 Wh = 145 Wh, which × 3.45 mL/Wh exactly matches Li et al.'s direct measurement of 500 mL for a ChatGPT conversation.",
     baseEnergyWh: 0.15, energyLow: 0.15, energyHigh: 145, baseWaterMl: 0.15 * 3.45,
     confidence: "medium", tierSensitive: true,
     math: {
@@ -215,7 +215,7 @@ const SCENARIOS: Scenario[] = [
     confidence: "low", tierSensitive: true,
     math: {
       energy: { equation: "Energy = 100 suggestions × [energy per suggestion]", sourceName: "Luccioni 2023 · Google Cloud 2025 (scaled) · EPRI 2024", derivation: "Each code suggestion is one AI inference call. Code completions are shorter than full chat prompts.", tierSource: TIER_SOURCE["coding"] },
-      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Average energy (5 Wh) × Typical WUE (3.45) = 17.3 mL per 100 suggestions." },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 (Aug) · Li et al. 2023 · IEA 2024", derivation: "Standard energy (12.0 Wh) × Typical WUE (3.45) = 41.4 mL per 100 suggestions." },
     },
   },
   {
@@ -225,7 +225,7 @@ const SCENARIOS: Scenario[] = [
     confidence: "low", tierSensitive: true,
     math: {
       energy: { equation: "Energy = ~1,000 AI interactions × [avg energy per interaction]", sourceName: "Modelled · Google Cloud 2025 (average tier) · EPRI 2024 (high tier)", derivation: "A session is modelled as ~1,000 chained AI calls.", tierSource: TIER_SOURCE["app-build"] },
-      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Average energy (100 Wh) × Typical WUE (3.45) = 345 mL (~0.35 L) per session." },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 (Aug) · Li et al. 2023 · IEA 2024", derivation: "Standard energy (240 Wh) × Typical WUE (3.45) = 828 mL (~0.83 L) per session." },
     },
   },
   {
@@ -253,19 +253,20 @@ const SCENARIOS: Scenario[] = [
 ];
 
 // ─── CUSTOM CALCULATOR ────────────────────────────────────────────────────────
+// Unit values use Standard energy tier (Google Cloud 2025 Aug, 0.24 Wh base) + Efficient WUE (1.1 mL/Wh)
 const CUSTOM_TASKS = [
-  { id: "chat",    label: "Short chat messages",          unitEnergyWh: 0.10,  unitWaterMl: 0.12,  max: 1000, step: 1, defaultVal: 10  },
-  { id: "longchat",label: "Long conversations",           unitEnergyWh: 5.0,   unitWaterMl: 6.0,   max: 100,  step: 1, defaultVal: 0   },
-  { id: "image",   label: "AI images generated",         unitEnergyWh: 2.4,   unitWaterMl: 2.88,  max: 200,  step: 1, defaultVal: 0   },
-  { id: "video",   label: "AI video clips (5–15 sec)",   unitEnergyWh: 944,   unitWaterMl: 1133,  max: 20,   step: 1, defaultVal: 0   },
-  { id: "code",    label: "Code completion suggestions", unitEnergyWh: 0.05,  unitWaterMl: 0.06,  max: 1000, step: 1, defaultVal: 100 },
-  { id: "app",     label: "App build sessions",          unitEnergyWh: 100,   unitWaterMl: 120,   max: 10,   step: 1, defaultVal: 0   },
+  { id: "chat",    label: "Short chat messages",          unitEnergyWh: 0.24,  unitWaterMl: 0.26,  max: 1000, step: 1, defaultVal: 10  },
+  { id: "longchat",label: "Long conversations",           unitEnergyWh: 12.0,  unitWaterMl: 13.0,  max: 100,  step: 1, defaultVal: 0   },
+  { id: "image",   label: "AI images generated",         unitEnergyWh: 2.4,   unitWaterMl: 2.64,  max: 200,  step: 1, defaultVal: 0   },
+  { id: "video",   label: "AI video clips (5–15 sec)",   unitEnergyWh: 944,   unitWaterMl: 1038,  max: 20,   step: 1, defaultVal: 0   },
+  { id: "code",    label: "Code completion suggestions", unitEnergyWh: 0.12,  unitWaterMl: 0.13,  max: 1000, step: 1, defaultVal: 100 },
+  { id: "app",     label: "App build sessions",          unitEnergyWh: 240,   unitWaterMl: 264,   max: 10,   step: 1, defaultVal: 0   },
 ];
 
 // ─── ACTION TIPS ──────────────────────────────────────────────────────────────
 const ACTION_TIPS = [
-  { impact: "Very high", color: "#c0392b", title: "Skip AI video generation unless essential", body: "One 10-second AI video uses as much energy as ~9,400 chat messages (at Google's efficient rate). Describe your idea in words first. If you must generate, generate once — don't regenerate." },
-  { impact: "High",      color: "#e67e22", title: "Think before generating AI images",        body: "One AI image uses ~24× more energy than a chat message. Ask: can I describe this in words instead? Reserve image generation for when visuals are truly necessary." },
+  { impact: "Very high", color: "#c0392b", title: "Skip AI video generation unless essential", body: "One 10-second AI video uses as much energy as ~3,900 chat messages (at Google's measured rate). Describe your idea in words first. If you must generate, generate once — don't regenerate." },
+  { impact: "High",      color: "#e67e22", title: "Think before generating AI images",        body: "One AI image uses ~10× more energy than a chat message. Ask: can I describe this in words instead? Reserve image generation for when visuals are truly necessary." },
   { impact: "High",      color: "#e67e22", title: "Get your prompt right the first time",     body: "Every 'try again' or 'make it shorter' is a full new request at the same cost. Spend 30 seconds being specific before submitting. One good prompt beats five mediocre ones." },
   { impact: "Medium",    color: "#f0a500", title: "Use smaller models for simple tasks",      body: "Basic questions and formatting don't need the most powerful AI. Google's Gemini Flash or GPT-4o Mini use significantly less energy than their full counterparts for everyday tasks." },
   { impact: "Medium",    color: "#f0a500", title: "Batch your questions into one prompt",     body: "Three separate messages cost 3× more than one well-structured prompt. Combine related questions: 'What is X, why does Y happen, and how do I fix Z?' beats asking each separately." },
@@ -646,7 +647,7 @@ function ComparePanel({ selectedId, tier, wueTier, onClose }: { selectedId: stri
             <label className="flex items-start gap-3 cursor-pointer group">
               <input type="checkbox" checked={showVideo} onChange={e => setShowVideo(e.target.checked)} className="accent-white mt-0.5 w-3.5 h-3.5 shrink-0" />
               <span className="text-xs text-white/50 group-hover:text-white/70 leading-relaxed">
-                <strong className="text-white/70">Video generation</strong> — one 10-sec clip uses ~{Math.round(944/0.10)}× more energy than a single Gemini text prompt. Physically expected (hundreds of image generation passes per video).
+                <strong className="text-white/70">Video generation</strong> — one 10-sec clip uses ~{Math.round(944/0.24)}× more energy than a single Gemini text prompt. Physically expected (hundreds of image generation passes per video).
               </span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer group">
@@ -793,22 +794,22 @@ function SourcesModal({ onClose }: { onClose: () => void }) {
                 <p className="font-semibold text-black text-sm mb-2">Two independent selectors — energy and water</p>
                 <p>Energy and water are controlled separately because they depend on different factors. Energy depends on which AI model and infrastructure you use. Water depends on where the data center is located and what cooling system it uses — independently of the AI model.</p>
                 <ul className="mt-2 ml-4 flex flex-col gap-1.5">
-                  <li className="list-disc"><strong>Energy → Low/Average/High:</strong> represents different published study estimates for energy per AI query.</li>
+                  <li className="list-disc"><strong>Energy → Light/Standard/Intensive:</strong> represents different published study estimates for energy per AI query.</li>
                   <li className="list-disc"><strong>Water → Efficient/Typical/Water-intensive:</strong> represents the Water Use Effectiveness (WUE) of the data center, which varies by location and cooling type.</li>
                 </ul>
               </div>
               <div>
                 <p className="font-semibold text-black text-sm mb-2">Energy estimates</p>
                 <ul className="ml-4 flex flex-col gap-1.5">
-                  <li className="list-disc"><strong>Low (Luccioni 2023):</strong> directly measured on open-source GPU hardware. Small models like BLOOM, OPT, Stable Diffusion 1.5.</li>
-                  <li className="list-disc"><strong>Average (Google Cloud 2025):</strong> direct measurement. A median Gemini App text-generation prompt used 0.10 Wh and 0.12 mL (May 2025 data). Google's TPU infrastructure (Trillium/Ironwood) is among the most efficient for AI inference.</li>
-                  <li className="list-disc"><strong>High (EPRI 2024 / Goldman Sachs 2024):</strong> estimated for ChatGPT-class models on GPU infrastructure (Azure). Goldman Sachs: AI uses ~10× more than a Google Search (0.3 Wh × 10 ≈ 3 Wh). EPRI's ChatGPT estimate: 2.9 Wh.</li>
+                  <li className="list-disc"><strong>Light (Luccioni et al. 2023):</strong> directly measured on open-source GPU hardware. Small models like BLOOM, OPT, Stable Diffusion 1.5. Closest to local or self-hosted AI.</li>
+                  <li className="list-disc"><strong>Standard (Google Cloud 2025, Aug):</strong> comprehensive measurement (arXiv:2508.15734). A median Gemini App text prompt: 0.24 Wh and 0.26 mL — covers active AI chips, host CPU, cooling overhead, and idle provisioning. Google's earlier May 2025 figure of 0.10 Wh was partial (GPU/TPU active only); Google's Aug paper explicitly notes it "substantially underestimates" the real footprint.</li>
+                  <li className="list-disc"><strong>Intensive (EPRI 2024 · Jegham et al. 2025):</strong> estimated for ChatGPT-class models on Azure GPU infrastructure. EPRI's ChatGPT query estimate: 2.9 Wh. OpenAI's o3 reasoning model: ~3.9 Wh (Jegham et al. 2025). Note: modern GPT-4o is ~0.34 Wh (Sam Altman, Jun 2025) — now close to Standard-tier.</li>
                 </ul>
               </div>
               <div>
                 <p className="font-semibold text-black text-sm mb-2">Water Use Effectiveness (WUE)</p>
                 <ul className="ml-4 flex flex-col gap-1.5">
-                  <li className="list-disc"><strong>Efficient (1.2 mL/Wh, Google 2025):</strong> derived from Google's direct measurement — 0.12 mL water per 0.10 Wh prompt = 1.2 mL/Wh. Google uses renewable energy, TPU hardware, and operates in cooler climates.</li>
+                  <li className="list-disc"><strong>Efficient (1.1 mL/Wh, Google Cloud 2025 Aug):</strong> derived from Google's comprehensive measurement — 0.26 mL water per 0.24 Wh prompt ≈ 1.1 mL/Wh. Google uses renewable energy, custom TPU hardware, and operates in cooler climates.</li>
                   <li className="list-disc"><strong>Typical (3.45 mL/Wh, Li et al. 2023):</strong> calibrated from Li et al.'s estimate that ChatGPT produces ~10 mL per query at 2.9 Wh/query → 10/2.9 ≈ 3.45 mL/Wh. Represents average US commercial AI infrastructure (Azure-class).</li>
                   <li className="list-disc"><strong>Water-intensive (6.0 mL/Wh, IEA 2024):</strong> upper range for hot-climate data centers (Texas, Arizona) using evaporative cooling during summer months.</li>
                 </ul>
@@ -829,9 +830,9 @@ function SourcesModal({ onClose }: { onClose: () => void }) {
                 </div>
               ))}
               <div className="border-t border-gray-100 pt-4 mt-2">
-                <p className="font-semibold text-black text-sm mb-2">Google Cloud 2025</p>
-                <p className="text-xs text-gray-500 mb-2">Google Cloud Infrastructure — May 2025</p>
-                <p className="text-xs text-gray-600 leading-relaxed">Direct measurement of a median Gemini App text-generation prompt: 0.10 Wh energy, 0.03 g CO₂, 0.12 mL water (May 2025 point-in-time data). Methodology: energy per prompt × Google's 2024 average fleetwide grid carbon intensity (emissions) and water usage effectiveness (water). Used as the "Average" energy estimate and source for the Efficient (1.2 mL/Wh) WUE value in this tool.</p>
+                <p className="font-semibold text-black text-sm mb-2">Google Cloud 2025 (Aug)</p>
+                <p className="text-xs text-gray-500 mb-2">Google Cloud Infrastructure — August 2025 (arXiv:2508.15734)</p>
+                <p className="text-xs text-gray-600 leading-relaxed">Comprehensive measurement of a median Gemini App text-generation prompt: 0.24 Wh energy, 0.03 g CO₂, 0.26 mL water (Aug 2025 paper). Covers active AI chips (TPU/GPU), host CPU &amp; DRAM, cooling overhead, and idle machine provisioning. Google's earlier May 2025 blog figure of 0.10 Wh / 0.12 mL counted only active GPU/TPU — the Aug paper explicitly notes that approach "substantially underestimates" the real footprint. Used as the "Standard" energy estimate and source for the Efficient (1.1 mL/Wh) WUE value in this tool.</p>
                 <a href="https://cloud.google.com/blog/products/infrastructure/measuring-the-environmental-impact-of-ai-inference/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-blue-500 mt-2 hover:underline">
                   Read the Google Cloud blog post <ExternalLink size={11} />
                 </a>
@@ -843,9 +844,9 @@ function SourcesModal({ onClose }: { onClose: () => void }) {
               {[
                 { title: "Only Google has published per-prompt measurements (2025)", body: "Google Cloud's May 2025 blog post is the only major AI company to publish direct per-prompt energy and water measurements. ChatGPT (OpenAI/Azure), Claude (Anthropic/AWS), and Midjourney have not published per-query figures. All estimates for non-Google commercial AI are modelled." },
                 { title: "Video generation is unverified", body: "No peer-reviewed study has directly measured energy for commercial video AI (Sora, Runway, Pika) as of 2025. The 944 Wh estimate is derived by scaling image measurements by frame count — physically reasonable but unconfirmed." },
-                { title: "Water varies dramatically by data center location", body: "WUE can range from ~1.2 mL/Wh (Google's efficient TPU data centers) to 6+ mL/Wh (hot-climate evaporative cooling). When you make an AI request, you typically don't know where it will be processed." },
+                { title: "Water varies dramatically by data center location", body: "WUE can range from ~1.1 mL/Wh (Google's efficient TPU data centers) to 6+ mL/Wh (hot-climate evaporative cooling). When you make an AI request, you typically don't know where it will be processed." },
                 { title: "Hardware lifecycle excluded", body: "All estimates cover operational energy only. GPU and server manufacturing, data center construction, and end-of-life disposal are excluded. Research suggests embodied carbon represents 50–80% of total lifecycle impact." },
-                { title: "Google's 2025 efficiency may not apply to other providers", body: "Google uses custom TPUs (Trillium/Ironwood) that are 30× more energy-efficient than their first TPU. ChatGPT and Claude run primarily on Nvidia GPUs in third-party cloud infrastructure — likely closer to the 'High' energy estimate." },
+                { title: "Google's 2025 efficiency may not apply to other providers", body: "Google uses custom TPUs (Trillium/Ironwood) that are 30× more energy-efficient than their first TPU. ChatGPT and Claude run primarily on Nvidia GPUs in third-party cloud infrastructure — likely closer to the 'Intensive' energy estimate for older workloads, though modern GPT-4o is now near the 'Standard' range." },
               ].map((g, i) => (
                 <div key={i} className="border-b border-gray-100 pb-4 last:border-0">
                   <p className="font-semibold text-black mb-1">{g.title}</p>
@@ -1009,7 +1010,7 @@ export default function Home() {
             Sources & methodology
           </button>
           <p className="text-[10px] text-gray-300 italic font-light text-right max-w-[220px] leading-relaxed">
-            Varies by model, data center & region. Average energy = Google Cloud 2025.
+            Varies by model, data center & region. Standard energy = Google Cloud 2025 (Aug).
           </p>
         </div>
       </div>
