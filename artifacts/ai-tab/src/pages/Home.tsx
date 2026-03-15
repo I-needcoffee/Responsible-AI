@@ -367,7 +367,7 @@ function equivWater(ml: number): string {
 function InlineDropdown({ value, onChange }: { value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false);
   const options = [
-    ...SCENARIOS.map(s => ({ id: s.id, text: `${s.verb} ${s.dropdownText}`, label: `${s.verb.toLowerCase()} ${s.dropdownLabel}` })),
+    ...SCENARIOS.map(s => ({ id: s.id, text: `${s.verb} ${s.dropdownText}`, label: s.dropdownLabel })),
     { id: "custom", text: "A custom combination", label: "a custom combination" },
   ];
   const selected = options.find(o => o.id === value) ?? options[0];
@@ -375,10 +375,21 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
   return (
     <span className="relative inline-block">
       <button onClick={() => setOpen(v => !v)}
-        className="cursor-pointer inline-flex items-center gap-1 hover:opacity-80 transition-opacity font-bold"
-        style={{ border: "1.5px solid #c0c0c0", borderRadius: "100px", padding: "3px 16px 4px 16px", background: "transparent", fontSize: "inherit", fontFamily: "inherit", color: "inherit" }}>
+        className="cursor-pointer inline-flex items-center gap-2 font-bold transition-all hover:opacity-75 active:scale-[0.98]"
+        style={{
+          border: "2px solid #888",
+          borderRadius: "100px",
+          padding: "5px 20px 6px 20px",
+          background: "rgba(0,0,0,0.04)",
+          fontSize: "inherit",
+          fontFamily: "'Anthropic Serif', serif",
+          color: "inherit",
+          lineHeight: "inherit",
+        }}>
         {selected.text}
-        <span style={{ fontSize: "0.55em", opacity: 0.4, marginLeft: 3 }}>▾</span>
+        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" style={{ opacity: 0.55, flexShrink: 0, marginTop: 1 }}>
+          <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
       </button>
       <AnimatePresence>
         {open && (
@@ -388,7 +399,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
               initial={{ opacity: 0, y: -4, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }} transition={{ duration: 0.12 }}
               className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl z-30 py-2 overflow-hidden"
-              style={{ minWidth: "270px", fontFamily: "'Anthropic Sans', sans-serif", fontSize: "14px" }}>
+              style={{ minWidth: "280px", fontFamily: "'Anthropic Sans', sans-serif", fontSize: "14px" }}>
               {options.map(o => (
                 <button key={o.id} onClick={() => { onChange(o.id); setOpen(false); }}
                   className={`block w-full text-left px-5 py-2.5 transition-colors hover:bg-gray-50 ${o.id === value ? "font-semibold text-black" : "font-normal text-gray-600"}`}>
@@ -659,7 +670,7 @@ function ComparePanel({ selectedId, tier, wueTier, onClose }: { selectedId: stri
 function ActionPanel({ scenario, energyWh, waterMl, onClose }: { scenario: Scenario | null; energyWh: number; waterMl: number; onClose: () => void }) {
   const [eOff, setEOff] = useState(ENERGY_OFFSETS[0].id);
   const [wOff, setWOff] = useState(WATER_OFFSETS[0].id);
-  const [tab, setTab] = useState<"habits" | "offset">("habits");
+  const [tab, setTab] = useState<"habits" | "offset">("offset");
   const ea = ENERGY_OFFSETS.find(a => a.id === eOff)!;
   const wa = WATER_OFFSETS.find(a => a.id === wOff)!;
 
@@ -681,11 +692,11 @@ function ActionPanel({ scenario, energyWh, waterMl, onClose }: { scenario: Scena
             <button onClick={onClose} className="p-1.5 rounded-full hover:bg-white/10 shrink-0"><X size={14} className="text-white/50" /></button>
           </div>
           <div className="flex gap-1 mt-4 bg-white/8 rounded-full p-1">
-            <button onClick={() => setTab("habits")} className={`flex-1 text-xs py-1.5 rounded-full font-medium transition-all ${tab === "habits" ? "bg-white text-black" : "text-white/40 hover:text-white/60"}`}>
-              Everyday habits
-            </button>
             <button onClick={() => setTab("offset")} className={`flex-1 text-xs py-1.5 rounded-full font-medium transition-all ${tab === "offset" ? "bg-white text-black" : "text-white/40 hover:text-white/60"}`}>
               Offset this task
+            </button>
+            <button onClick={() => setTab("habits")} className={`flex-1 text-xs py-1.5 rounded-full font-medium transition-all ${tab === "habits" ? "bg-white text-black" : "text-white/40 hover:text-white/60"}`}>
+              Everyday habits
             </button>
           </div>
         </div>
@@ -920,26 +931,26 @@ export default function Home() {
                 </div>
               ) : scenario ? (
                 <>
-                  {/* Line 1: dropdown */}
-                  <InlineDropdown value={selectedId} onChange={setSelectedId} />
-
-                  {/* Line 2: data sentence */}
-                  <p className="text-[1.15rem] sm:text-[1.35rem] md:text-[1.65rem] leading-[1.5] text-black text-center -mt-1"
+                  {/* Primary block: dropdown + data sentence — same font, dominant element */}
+                  <div className="flex flex-col items-center gap-2 text-[1.15rem] sm:text-[1.35rem] md:text-[1.65rem] leading-[1.5] text-black text-center"
                     style={{ fontFamily: "'Anthropic Serif', serif" }}>
-                    used{" "}
-                    <strong style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtEnergy(energyWh)}</strong>
-                    {" "}of energy and{" "}
-                    <strong style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtWater(waterMl)}</strong>
-                    {" "}of water.
-                  </p>
+                    <InlineDropdown value={selectedId} onChange={setSelectedId} />
+                    <p>
+                      used{" "}
+                      <strong style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtEnergy(energyWh)}</strong>
+                      {" "}of energy and{" "}
+                      <strong style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtWater(waterMl)}</strong>
+                      {" "}of water.
+                    </p>
+                  </div>
 
-                  {/* Equivalent */}
+                  {/* Secondary: equivalency */}
                   <p className="text-sm md:text-[1.05rem] leading-[1.7] text-gray-500 text-center -mt-1"
                     style={{ fontFamily: "'Anthropic Serif', serif" }}>
                     That's {equivEnergy(energyWh)} and {equivWater(waterMl)}.
                   </p>
 
-                  {/* Dual selectors */}
+                  {/* Tertiary: selectors */}
                   <EstimateSelectors tier={tier} wueTier={wueTier} onTierChange={setTier} onWueTierChange={setWueTier} />
 
                   {/* Fine print */}
