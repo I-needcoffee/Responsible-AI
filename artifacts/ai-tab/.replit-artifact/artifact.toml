@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "The AI Tab"
+title = "Responsible-AI"
 version = "1.0.0"
 id = "artifacts/ai-tab"
 router = "path"
