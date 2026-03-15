@@ -64,14 +64,14 @@ export const WUE_META: Record<WueTier, { label: string; shortDesc: string; sourc
 // Tier-invariant tasks (image, video, training-llm) use base values directly.
 // Google 2025 data: 0.10 Wh per median Gemini text prompt (measured, May 2025).
 const TIER_ENERGY: Record<string, Record<ModelTier, number>> = {
-  "short-chat":       { research: 0.003, commercial: 0.10,  frontier: 2.9   },
-  "ai-search":        { research: 0.01,  commercial: 0.30,  frontier: 8.7   },
-  "email-reply":      { research: 0.005, commercial: 0.20,  frontier: 3.0   },
-  "long-chat":        { research: 0.15,  commercial: 5.0,   frontier: 145   },
-  "meeting-notes":    { research: 0.06,  commercial: 0.70,  frontier: 5.9   },
-  "coding":           { research: 0.1,   commercial: 5.0,   frontier: 29    },
-  "app-build":        { research: 50,    commercial: 100,   frontier: 1000  },
-  "audio-transcript": { research: 0.002, commercial: 0.02,  frontier: 0.1   },
+  "short-chat":    { research: 0.003, commercial: 0.10,  frontier: 2.9   },
+  "email-reply":   { research: 0.005, commercial: 0.20,  frontier: 3.0   },
+  "ai-search":     { research: 0.01,  commercial: 0.30,  frontier: 8.7   },
+  "inbox-search":  { research: 0.03,  commercial: 0.50,  frontier: 5.0   },
+  "meeting-notes": { research: 0.06,  commercial: 0.70,  frontier: 5.9   },
+  "long-chat":     { research: 0.15,  commercial: 5.0,   frontier: 145   },
+  "coding":        { research: 0.1,   commercial: 5.0,   frontier: 29    },
+  "app-build":     { research: 50,    commercial: 100,   frontier: 1000  },
 };
 
 const TIER_SOURCE: Record<string, Record<ModelTier, string>> = {
@@ -95,10 +95,10 @@ const TIER_SOURCE: Record<string, Record<ModelTier, string>> = {
     commercial: "Google Cloud 2025 scaled: ~1,000 AI interactions × 0.10 Wh = 100 Wh. Represents an app-building session using Gemini-class efficient models.",
     frontier:   "EPRI 2024 scaled: ~500 interactions × 2 Wh avg = 1,000 Wh. Upper bound — coding assistants typically use specialized models, not full frontier LLMs.",
   },
-  "audio-transcript": {
-    research:   "Luccioni et al. 2023: speech recognition at 0.001–0.01 Wh/min. Mid: 0.002 Wh/min.",
-    commercial: "Scaled estimate: commercial transcription (Whisper large, Deepgram) ~10× small model. No direct Google 2025 data for audio transcription tasks.",
-    frontier:   "Estimated upper bound. Limited peer-reviewed data for commercial transcription services.",
+  "inbox-search": {
+    research:   "Estimated: batch embedding lookups over ~100 emails (0.001 Wh each) + small-model analysis ≈ 0.03 Wh. Local or on-device models only.",
+    commercial: "Google Cloud 2025 basis: semantic search over inbox (~0.30 Wh for 3 retrieval passes) + one synthesis/summary generation (0.20 Wh) ≈ 0.50 Wh. Covers tools like Gmail AI search, Copilot for Outlook, or asking an AI assistant to find and analyze email history.",
+    frontier:   "EPRI 2024 basis: full inbox processing with a frontier LLM reading many email threads (multiple calls ≈ 5.0 Wh). Upper bound for frontier models analyzing large email corpora.",
   },
   "ai-search": {
     research:   "Estimated lower bound for a small-model RAG pipeline: 0.01 Wh. Much lower than commercial AI search as it assumes efficient local models.",
@@ -116,6 +116,7 @@ const TIER_SOURCE: Record<string, Record<ModelTier, string>> = {
     frontier:   "EPRI 2024 basis: commercial transcription rate (~0.10 Wh/min × 30 min = 3.0 Wh) + frontier-model summary (2.9 Wh) ≈ 5.9 Wh. Upper bound for meeting AI using frontier LLMs.",
   },
 };
+
 
 function getEnergyWh(id: string, base: number, tier: ModelTier): number {
   return TIER_ENERGY[id]?.[tier] ?? base;
@@ -147,6 +148,16 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
+    id: "email-reply", verb: "Drafting", dropdownText: "an AI email reply", dropdownLabel: "an AI email reply",
+    clarifying: "AI reads your email thread and drafts a reply — like Gmail Smart Reply, Copilot in Outlook, or asking an AI assistant to write a specific response. One of the lighter everyday AI tasks.",
+    baseEnergyWh: 0.005, energyLow: 0.005, energyHigh: 3.0, baseWaterMl: 0.005 * 3.45,
+    confidence: "low", tierSensitive: true,
+    math: {
+      energy: { equation: "Energy = 1 context read + 1 reply generation", sourceName: "Estimated — Google Cloud 2025 basis · EPRI 2024 (high)", derivation: "Modelled as semantic search over the thread + one text generation call.", tierSource: TIER_SOURCE["email-reply"] },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Average (0.20 Wh × 3.45 mL/Wh ≈ 0.7 mL). One of the lower-impact everyday AI tasks." },
+    },
+  },
+  {
     id: "ai-search", verb: "Doing", dropdownText: "an AI web search", dropdownLabel: "an AI web search",
     clarifying: "One AI-powered search query — Perplexity, Google AI Overviews, or Bing Copilot. These make 3+ model passes: understanding your query, retrieving sources, and synthesizing an answer — which is why they use more than a single chat message.",
     baseEnergyWh: 0.01, energyLow: 0.01, energyHigh: 8.7, baseWaterMl: 0.01 * 3.45,
@@ -157,23 +168,13 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "email-reply", verb: "Drafting", dropdownText: "an AI email reply", dropdownLabel: "an AI email reply",
-    clarifying: "AI reads your email thread and drafts a reply — like Gmail Smart Reply, Copilot in Outlook, or asking an AI assistant to write a specific response. One of the more lightweight everyday AI tasks.",
-    baseEnergyWh: 0.005, energyLow: 0.005, energyHigh: 3.0, baseWaterMl: 0.005 * 3.45,
+    id: "inbox-search", verb: "Searching and analyzing", dropdownText: "your inbox with AI", dropdownLabel: "inbox search and analysis",
+    clarifying: "AI searches through your email history, finds relevant threads, and surfaces insights or action items. More intensive than a single reply because it processes many messages — like asking Gmail AI to find all emails about a project and summarize what needs doing.",
+    baseEnergyWh: 0.03, energyLow: 0.03, energyHigh: 5.0, baseWaterMl: 0.03 * 3.45,
     confidence: "low", tierSensitive: true,
     math: {
-      energy: { equation: "Energy = 1 context read + 1 reply generation", sourceName: "Estimated — Google Cloud 2025 basis · EPRI 2024 (high)", derivation: "Modelled as semantic search over the thread + one text generation call.", tierSource: TIER_SOURCE["email-reply"] },
-      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Average (0.20 Wh × 3.45 mL/Wh ≈ 0.7 mL). One of the lower-impact everyday AI tasks." },
-    },
-  },
-  {
-    id: "long-chat", verb: "Having", dropdownText: "a long AI conversation", dropdownLabel: "a long AI conversation",
-    clarifying: "A 20–50 message back-and-forth session. At the Average estimate (Google 2025), each message costs 0.10 Wh. At the High estimate, 50 messages × 2.9 Wh = 145 Wh, which × 3.45 mL/Wh exactly matches Li et al.'s direct measurement of 500 mL.",
-    baseEnergyWh: 0.15, energyLow: 0.15, energyHigh: 145, baseWaterMl: 0.15 * 3.45,
-    confidence: "medium", tierSensitive: true,
-    math: {
-      energy: { equation: "Energy = 50 messages × [energy per message]", sourceName: "Luccioni 2023 · Google Cloud 2025 · EPRI 2024", derivation: "A long conversation is modelled as 50 AI interactions.", tierSource: TIER_SOURCE["long-chat"] },
-      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 (WUE methodology)", derivation: "At the High energy estimate with Typical WUE: 145 Wh × 3.45 mL/Wh = 500 mL — exactly matching Li et al.'s direct measurement for a 50-message ChatGPT conversation. ✓" },
+      energy: { equation: "Energy = inbox retrieval passes + 1 synthesis generation", sourceName: "Estimated — Google Cloud 2025 basis · EPRI 2024 (high)", derivation: "Modelled as 3 semantic retrieval passes over email history (~0.30 Wh) plus one synthesis/summary generation (0.20 Wh) ≈ 0.50 Wh at commercial tier.", tierSource: TIER_SOURCE["inbox-search"] },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Average (0.50 Wh × 3.45 mL/Wh ≈ 1.7 mL). More costly than a single email reply because of multi-pass retrieval." },
     },
   },
   {
@@ -198,14 +199,13 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "video", verb: "Generating", dropdownText: "a short AI video", dropdownLabel: "a short AI video",
-    clarifying: "A 5–15 second AI video clip. Being ~400× more energy-intensive than a single image is expected: a 10-second video requires generating ~240 frames, each comparable to an image generation pass.",
-    baseEnergyWh: 944, energyLow: 200, energyHigh: 2500, baseWaterMl: 944 * 1.2,
-    confidence: "low", tierSensitive: false,
+    id: "long-chat", verb: "Having", dropdownText: "a long AI conversation", dropdownLabel: "a long AI conversation",
+    clarifying: "A 20–50 message back-and-forth session. At the Average estimate (Google 2025), each message costs 0.10 Wh. At the High estimate, 50 messages × 2.9 Wh = 145 Wh, which × 3.45 mL/Wh exactly matches Li et al.'s direct measurement of 500 mL.",
+    baseEnergyWh: 0.15, energyLow: 0.15, energyHigh: 145, baseWaterMl: 0.15 * 3.45,
+    confidence: "medium", tierSensitive: true,
     math: {
-      energy: { equation: "~944 Wh ≈ 240 frames × ~4 Wh per frame (first-principles estimate)", sourceName: "Derived from Luccioni et al. 2023 — no direct measurement for commercial video AI", derivation: "No published study has directly measured energy for commercial video AI (Sora, Runway, Pika) as of 2025. Derived: 10 seconds at 24 fps = 240 frames × ~4 Wh/frame (Luccioni upper for diffusion) = 960 Wh. A previous citation ('Fernandez et al. 2025') was removed — that publication could not be verified." },
-      water: { equation: "Water = 944 Wh × WUE (mL/Wh) — see Water Location selector", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Energy is 944 Wh. Water depends on WUE. Efficient (1.2): ~1.1 L. Typical (3.45): ~3.3 L. Water-intensive (6): ~5.7 L." },
-      note: "Video gen being ~400× image gen is physically correct and expected. Low confidence on the absolute number — no peer-reviewed direct measurement for commercial video AI exists.",
+      energy: { equation: "Energy = 50 messages × [energy per message]", sourceName: "Luccioni 2023 · Google Cloud 2025 · EPRI 2024", derivation: "A long conversation is modelled as 50 AI interactions.", tierSource: TIER_SOURCE["long-chat"] },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023 (WUE methodology)", derivation: "At the High energy estimate with Typical WUE: 145 Wh × 3.45 mL/Wh = 500 mL — exactly matching Li et al.'s direct measurement for a 50-message ChatGPT conversation. ✓" },
     },
   },
   {
@@ -229,6 +229,17 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
+    id: "video", verb: "Generating", dropdownText: "a short AI video", dropdownLabel: "a short AI video",
+    clarifying: "A 5–15 second AI video clip. Being ~400× more energy-intensive than a single image is expected: a 10-second video requires generating ~240 frames, each comparable to an image generation pass.",
+    baseEnergyWh: 944, energyLow: 200, energyHigh: 2500, baseWaterMl: 944 * 1.2,
+    confidence: "low", tierSensitive: false,
+    math: {
+      energy: { equation: "~944 Wh ≈ 240 frames × ~4 Wh per frame (first-principles estimate)", sourceName: "Derived from Luccioni et al. 2023 — no direct measurement for commercial video AI", derivation: "No published study has directly measured energy for commercial video AI (Sora, Runway, Pika) as of 2025. Derived: 10 seconds at 24 fps = 240 frames × ~4 Wh/frame (Luccioni upper for diffusion) = 960 Wh. A previous citation ('Fernandez et al. 2025') was removed — that publication could not be verified." },
+      water: { equation: "Water = 944 Wh × WUE (mL/Wh) — see Water Location selector", sourceName: "Google Cloud 2025 · Li et al. 2023 · IEA 2024", derivation: "Energy is 944 Wh. Water depends on WUE. Efficient (1.2): ~1.1 L. Typical (3.45): ~3.3 L. Water-intensive (6): ~5.7 L." },
+      note: "Video gen being ~400× image gen is physically correct and expected. Low confidence on the absolute number — no peer-reviewed direct measurement for commercial video AI exists.",
+    },
+  },
+  {
     id: "training-llm", verb: "Training", dropdownText: "a large language model", dropdownLabel: "training a large language model",
     clarifying: "Training GPT-3 (175B parameters) — one-time, not per use. Frontier models are estimated to need 10–100× more energy. No company has disclosed training costs.",
     baseEnergyWh: 1287000000, energyLow: 500000000, energyHigh: 5000000000, baseWaterMl: 700000000,
@@ -237,16 +248,6 @@ const SCENARIOS: Scenario[] = [
       energy: { equation: "~1.287 GWh = training FLOPs ÷ hardware efficiency ÷ PUE", sourceName: "Strubell et al. 2019 + Brown et al. 2020", derivation: "Brown et al. (2020) disclosed GPT-3 used ~3.14 × 10²³ FLOPs. Strubell et al. (2019) developed the FLOP→energy conversion methodology accounting for PUE." },
       water: { equation: "~700 million mL (700,000 L) — Li et al. direct facility estimate", sourceName: "Li et al. 2023 — Making AI Less Thirsty", derivation: "Li et al. directly estimated GPT-3 training used ~700,000 L at Microsoft Azure data centers (Quincy, WA). Direct estimate — not derived from WUE formula." },
       note: "Training is not estimate-range or water-location sensitive here — Li et al. measured this specific historical event. Frontier model training costs are not publicly disclosed.",
-    },
-  },
-  {
-    id: "audio-transcript", verb: "Transcribing", dropdownText: "1 minute of audio", dropdownLabel: "1 minute of audio",
-    clarifying: "Transcribing 1 minute of speech with an AI model (Whisper, Deepgram, etc.). One of the lowest-impact AI tasks.",
-    baseEnergyWh: 0.002, energyLow: 0.002, energyHigh: 0.1, baseWaterMl: 0.002 * 3.45,
-    confidence: "low", tierSensitive: true,
-    math: {
-      energy: { equation: "~0.002–0.1 Wh per minute of audio (estimate-dependent)", sourceName: "Luccioni et al. 2023 · scaled estimates", derivation: "Luccioni measured speech recognition at 0.001–0.01 Wh/min.", tierSource: TIER_SOURCE["audio-transcript"] },
-      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Derived from WUE methodology", derivation: "Even at the highest WUE (6 mL/Wh) and highest energy (0.1 Wh), water = 0.6 mL per minute — essentially negligible." },
     },
   },
 ];
@@ -311,9 +312,17 @@ const COMPARE_OPTIONS: CompareOption[] = [
 ];
 
 const TASK_COLORS: Record<string, string> = {
-  "short-chat": "#5B9FD4", "long-chat": "#2E80C0", "image": "#D96666",
-  "video": "#A52B2B", "coding": "#3D9A5A", "app-build": "#1A6E38",
-  "training-llm": "#888888", "audio-transcript": "#C88025",
+  "short-chat":   "#5B9FD4",
+  "email-reply":  "#10B981",
+  "ai-search":    "#8B5CF6",
+  "inbox-search": "#3B82F6",
+  "meeting-notes":"#F59E0B",
+  "image":        "#D96666",
+  "long-chat":    "#2E80C0",
+  "coding":       "#3D9A5A",
+  "app-build":    "#1A6E38",
+  "video":        "#A52B2B",
+  "training-llm": "#888888",
 };
 
 // ─── FORMAT HELPERS ───────────────────────────────────────────────────────────
