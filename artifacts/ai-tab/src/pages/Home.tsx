@@ -419,24 +419,24 @@ function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange }: {
   tier: ModelTier; wueTier: WueTier; onTierChange: (t: ModelTier) => void; onWueTierChange: (w: WueTier) => void;
 }) {
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="flex items-center gap-3">
-        <span className="text-[10px] text-gray-400 font-medium w-[58px] text-right leading-tight shrink-0">Energy<br/>estimate</span>
-        <div className="flex gap-1 bg-gray-100 rounded-full p-1">
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="flex items-center gap-2">
+        <span className="text-[9px] text-gray-400 font-medium w-[50px] text-right leading-tight shrink-0">Energy<br/>estimate</span>
+        <div className="flex gap-0.5 bg-gray-100 rounded-full p-0.5">
           {(["research", "commercial", "frontier"] as ModelTier[]).map(t => (
             <button key={t} onClick={() => onTierChange(t)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${tier === t ? "bg-white text-black shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${tier === t ? "bg-white text-black shadow-sm" : "text-gray-400 hover:text-gray-600"}`}>
               {TIER_META[t].rangeLabel}
             </button>
           ))}
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <span className="text-[10px] text-gray-400 font-medium w-[58px] text-right leading-tight shrink-0">Water<br/>location</span>
-        <div className="flex gap-1 bg-gray-100 rounded-full p-1">
+      <div className="flex items-center gap-2">
+        <span className="text-[9px] text-gray-400 font-medium w-[50px] text-right leading-tight shrink-0">Water<br/>location</span>
+        <div className="flex gap-0.5 bg-gray-100 rounded-full p-0.5">
           {(["efficient", "average", "intensive"] as WueTier[]).map(w => (
             <button key={w} onClick={() => onWueTierChange(w)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all ${wueTier === w ? "bg-white text-black shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${wueTier === w ? "bg-white text-black shadow-sm" : "text-gray-400 hover:text-gray-600"}`}>
               {WUE_META[w].label}
             </button>
           ))}
@@ -936,7 +936,7 @@ export default function Home() {
                     style={{ fontFamily: "'Anthropic Serif', serif" }}>
                     <InlineDropdown value={selectedId} onChange={setSelectedId} />
                     <p>
-                      used{" "}
+                      will use{" "}
                       <strong style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtEnergy(energyWh)}</strong>
                       {" "}of energy and{" "}
                       <strong style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtWater(waterMl)}</strong>
