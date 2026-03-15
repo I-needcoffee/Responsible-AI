@@ -299,12 +299,11 @@ function equivEnergy(wh: number): string {
 }
 function equivWater(ml: number): string {
   if (ml < 1) return `< 1 mL of water`;
-  if (ml < 15) return `${Math.round(ml)} mL of water`;
   const h = ml / 110;
-  if (h < 0.5) return `${Math.round(ml)} mL of water`;
-  if (h < 1) return `${h.toFixed(2)} handwashes`;
-  if (h < 10000) return `${Math.round(h).toLocaleString()} handwashes`;
-  return `${(h/1000).toFixed(1)}K handwashes`;
+  if (h >= 10000) return `${(h / 1000).toFixed(1)}K handwashes`;
+  if (h >= 1) return `${Math.round(h).toLocaleString()} handwash${Math.round(h) === 1 ? "" : "es"}`;
+  if (h >= 0.05) return `${(Math.round(h * 10) / 10)} of a handwash`;
+  return `${Math.round(ml)} mL of water`;
 }
 
 // ─── INLINE PILL DROPDOWN ────────────────────────────────────────────────────
@@ -441,17 +440,19 @@ function MathModal({ scenario, tier, wueTier, energyWh, waterMl, onClose }: {
 }
 
 // ─── CUSTOM CALCULATOR ────────────────────────────────────────────────────────
-function CustomCalculator() {
-  const [counts, setCounts] = useState<Record<string, number>>(Object.fromEntries(CUSTOM_TASKS.map(t => [t.id, t.defaultVal])));
-  const totalE = CUSTOM_TASKS.reduce((s, t) => s + (counts[t.id] ?? 0) * t.unitEnergyWh, 0);
-  const totalW = CUSTOM_TASKS.reduce((s, t) => s + (counts[t.id] ?? 0) * t.unitWaterMl, 0);
+function CustomCalculator({ counts, onChange, totalE, totalW }: {
+  counts: Record<string, number>;
+  onChange: (id: string, val: number) => void;
+  totalE: number;
+  totalW: number;
+}) {
   return (
     <div className="flex flex-col gap-4 w-full max-w-lg mx-auto">
       {CUSTOM_TASKS.map(t => (
         <div key={t.id} className="flex items-center gap-3">
           <label className="text-xs text-gray-500 w-44 shrink-0 leading-tight">{t.label}</label>
           <input type="range" min={0} max={t.max} step={t.step} value={counts[t.id] ?? 0}
-            onChange={e => setCounts(c => ({ ...c, [t.id]: Number(e.target.value) }))} className="flex-1 accent-black" />
+            onChange={e => onChange(t.id, Number(e.target.value))} className="flex-1 accent-black" />
           <span className="text-xs font-medium w-10 text-right tabular-nums">{counts[t.id] ?? 0}</span>
         </div>
       ))}
@@ -749,7 +750,7 @@ function SourcesModal({ onClose }: { onClose: () => void }) {
           {tab === "sources" && (
             <div className="flex flex-col gap-5">
               {isLoading && <p className="text-xs text-gray-400 italic">Loading sources…</p>}
-              {(sources || []).map(s => (
+              {((sources || []) as any[]).map((s: any) => (
                 <div key={s.id} className="border-b border-gray-100 pb-5 last:border-0">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1"><p className="font-semibold text-black text-sm">{s.title}</p><p className="text-xs text-gray-400 mt-0.5">{Array.isArray(s.authors) ? s.authors.join(", ") : s.authors} · {s.institution} · {s.year}</p></div>
@@ -819,12 +820,22 @@ export default function Home() {
   const [showSources, setShowSources] = useState(false);
   const [showAction, setShowAction] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
+  const [customCounts, setCustomCounts] = useState<Record<string, number>>(
+    Object.fromEntries(CUSTOM_TASKS.map(t => [t.id, t.defaultVal]))
+  );
+
+  const handleCustomChange = (id: string, val: number) =>
+    setCustomCounts(c => ({ ...c, [id]: val }));
 
   const isCustom = selectedId === "custom";
   const scenario = SCENARIOS.find(s => s.id === selectedId) ?? null;
   const wue = WUE_VALUES[wueTier];
-  const energyWh = scenario ? getEnergyWh(scenario.id, scenario.baseEnergyWh, tier) : 0;
-  const waterMl = scenario ? getWaterMl(scenario.id, scenario.baseWaterMl, energyWh, wue) : 0;
+
+  const customTotalE = CUSTOM_TASKS.reduce((s, t) => s + (customCounts[t.id] ?? 0) * t.unitEnergyWh, 0);
+  const customTotalW = CUSTOM_TASKS.reduce((s, t) => s + (customCounts[t.id] ?? 0) * t.unitWaterMl, 0);
+
+  const energyWh = isCustom ? customTotalE : scenario ? getEnergyWh(scenario.id, scenario.baseEnergyWh, tier) : 0;
+  const waterMl  = isCustom ? customTotalW : scenario ? getWaterMl(scenario.id, scenario.baseWaterMl, energyWh, wue) : 0;
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
@@ -841,7 +852,12 @@ export default function Home() {
                 <p className="text-center text-xs text-gray-400 mb-5">
                   Scenario: <InlineDropdown value={selectedId} onChange={setSelectedId} />
                 </p>
-                <CustomCalculator />
+                <CustomCalculator
+                  counts={customCounts}
+                  onChange={handleCustomChange}
+                  totalE={customTotalE}
+                  totalW={customTotalW}
+                />
               </div>
             ) : scenario ? (
               <>
