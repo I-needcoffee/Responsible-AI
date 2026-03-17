@@ -201,7 +201,7 @@ const AI_TASKS = [
     id: "app-building-session",
     name: "Full App Building Session (vibe coding, 1–2 hours)",
     category: "code",
-    description: "A full session of AI-assisted application development, like building an app with Replit Agent, Cursor, or similar tools. Includes many back-and-forth exchanges, code generation, debugging, and iteration.",
+    description: "A full session of AI-assisted application development, like building an app with Cursor or similar tools. Includes many back-and-forth exchanges, code generation, debugging, and iteration.",
     energyWh: {
       low: 10,
       mid: 50,

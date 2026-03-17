@@ -64,13 +64,21 @@ export const WUE_META: Record<WueTier, { label: string; shortDesc: string; sourc
 // Tier-invariant tasks (image, video, training-llm) use base values directly.
 // Google Cloud 2025 (Aug): 0.24 Wh per median Gemini text prompt (comprehensive measurement).
 const TIER_ENERGY: Record<string, Record<ModelTier, number>> = {
+  // Source: Luccioni 2023 (research: 0.003Wh), Google Cloud 2025 (commercial: 0.24Wh), EPRI 2024 (frontier: 2.9Wh)
   "short-chat":    { research: 0.003, commercial: 0.24,  frontier: 2.9   },
+  // Source: Modelled based on Google Cloud 2025 (commercial: 0.50Wh), EPRI 2024 (frontier: 3.0Wh)
   "email-reply":   { research: 0.005, commercial: 0.50,  frontier: 3.0   },
+  // Source: Modelled based on 3x search retrieval passes (commercial: 0.72Wh), EPRI 2024 (frontier: 8.7Wh)
   "ai-search":     { research: 0.01,  commercial: 0.72,  frontier: 8.7   },
+  // Source: Modelled multi-pass retrieval based on Google Cloud 2025 (commercial: 1.20Wh), EPRI 2024 (frontier: 5.0Wh)
   "inbox-search":  { research: 0.03,  commercial: 1.20,  frontier: 5.0   },
+  // Source: Audio rate Luccioni 2023 (research: 0.06Wh), Google Cloud transcription + summary (commercial: 1.70Wh)
   "meeting-notes": { research: 0.06,  commercial: 1.70,  frontier: 5.9   },
+  // Source: 50 messages x base (research: 0.15Wh), Google Cloud 2025 (commercial: 12.0Wh), EPRI 2024 (frontier: 145Wh)
   "long-chat":     { research: 0.15,  commercial: 12.0,  frontier: 145   },
+  // Source: 100 completions x base (research: 0.1Wh), Google Cloud 2025 (commercial: 12.0Wh), EPRI 2024 (frontier: 29Wh)
   "coding":        { research: 0.1,   commercial: 12.0,  frontier: 29    },
+  // Source: ~1000 interactions x base (research: 50Wh), Google Cloud 2025 (commercial: 240Wh), EPRI 2024 (frontier: 1000Wh)
   "app-build":     { research: 50,    commercial: 240,   frontier: 1000  },
 };
 
@@ -121,9 +129,20 @@ const TIER_SOURCE: Record<string, Record<ModelTier, string>> = {
 function getEnergyWh(id: string, base: number, tier: ModelTier): number {
   return TIER_ENERGY[id]?.[tier] ?? base;
 }
-function getWaterMl(id: string, baseWater: number, energyWh: number, wue: number): number {
+function getWaterMl(id: string, baseWater: number, energyWh: number, baseEnergyWh: number, wue: number, tier: ModelTier): number {
   if (id === "training-llm") return baseWater; // Li et al. direct facility estimate
-  return energyWh * wue;
+  
+  // Specific cited source decoupling rules:
+  // Li et al. (2023) directly correlates 2.9 Wh (frontier) with 500 mL for 50 queries.
+  // Google Cloud (2025) directly correlates 0.24 Wh (commercial) with 0.26 mL.
+  const hasDirectCitation = (id === "short-chat" || id === "long-chat") && (tier === "frontier" || tier === "commercial");
+  if (hasDirectCitation || id === "image" || id === "video") {
+    return energyWh * wue;
+  }
+  
+  // Decouple water from energy toggle for all other extrapolated tasks (use standard 'commercial' tier baseline)
+  const standardEnergy = getEnergyWh(id, baseEnergyWh, "commercial");
+  return standardEnergy * wue;
 }
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
@@ -416,17 +435,19 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
 }
 
 // ─── DUAL ESTIMATE SELECTORS ─────────────────────────────────────────────────
-function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange }: {
-  tier: ModelTier; wueTier: WueTier; onTierChange: (t: ModelTier) => void; onWueTierChange: (w: WueTier) => void;
+function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTierFixed }: {
+  tier: ModelTier; wueTier: WueTier; onTierChange: (t: ModelTier) => void; onWueTierChange: (w: WueTier) => void; isTierFixed?: boolean;
 }) {
+  const displayTier = isTierFixed ? "commercial" : tier;
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div className="flex items-center gap-2">
         <span className="text-[9px] text-gray-400 font-medium w-[50px] text-right leading-tight shrink-0">Energy<br/>estimate</span>
         <div className="flex gap-0.5 bg-gray-100 rounded-full p-0.5">
           {(["research", "commercial", "frontier"] as ModelTier[]).map(t => (
-            <button key={t} onClick={() => onTierChange(t)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${tier === t ? "bg-white text-black shadow-sm" : "text-gray-400 hover:text-gray-600"}`}>
+            <button key={t} onClick={() => !isTierFixed && onTierChange(t)}
+              disabled={isTierFixed && t !== "commercial"}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${(isTierFixed ? t === "commercial" : tier === t) ? "bg-white text-black shadow-sm" : isTierFixed ? "text-gray-300 opacity-50 cursor-not-allowed" : "text-gray-400 hover:text-gray-600"}`}>
               {TIER_META[t].rangeLabel}
             </button>
           ))}
@@ -443,8 +464,13 @@ function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange }: {
           ))}
         </div>
       </div>
+      {isTierFixed && (
+        <p className="text-[10px] text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 mt-2 mb-1">
+          Only "Average" (Standard) data is available for this medium
+        </p>
+      )}
       <p className="text-[10px] text-gray-400 italic text-center max-w-xs leading-relaxed mt-0.5">
-        {TIER_META[tier].source} (energy) · {WUE_META[wueTier].source} (water)
+        {TIER_META[displayTier].source} (energy) · {WUE_META[wueTier].source} (water)
       </p>
     </div>
   );
@@ -559,7 +585,7 @@ function ComparePanel({ selectedId, tier, wueTier, onClose }: { selectedId: stri
     .filter(s => (showTraining || s.id !== "training-llm") && (showVideo || s.id !== "video"))
     .map(s => {
       const e = getEnergyWh(s.id, s.baseEnergyWh, tier);
-      const w = getWaterMl(s.id, s.baseWaterMl, e, wue);
+          const w = getWaterMl(s.id, s.baseWaterMl, e, s.baseEnergyWh, wue, tier);
       return { ...s, val: option.compute(e, w), energy: e, water: w };
     })
     .sort((a, b) => a.val - b.val);
@@ -904,7 +930,7 @@ export default function Home() {
   const customTotalW = CUSTOM_TASKS.reduce((s, t) => s + (customCounts[t.id] ?? 0) * t.unitWaterMl, 0);
 
   const energyWh = isCustom ? customTotalE : scenario ? getEnergyWh(scenario.id, scenario.baseEnergyWh, tier) : 0;
-  const waterMl  = isCustom ? customTotalW : scenario ? getWaterMl(scenario.id, scenario.baseWaterMl, energyWh, wue) : 0;
+  const waterMl  = isCustom ? customTotalW : scenario ? getWaterMl(scenario.id, scenario.baseWaterMl, energyWh, scenario.baseEnergyWh, wue, tier) : 0;
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
@@ -917,7 +943,7 @@ export default function Home() {
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
               className="flex flex-col items-center gap-3 md:gap-5 w-full max-w-xl">
-
+              
               {isCustom ? (
                 <div className="w-full">
                   <p className="text-center text-xs text-gray-400 mb-4">
@@ -952,13 +978,13 @@ export default function Home() {
                   </p>
 
                   {/* Tertiary: selectors */}
-                  <EstimateSelectors tier={tier} wueTier={wueTier} onTierChange={setTier} onWueTierChange={setWueTier} />
+                  <EstimateSelectors tier={tier} wueTier={wueTier} onTierChange={setTier} onWueTierChange={setWueTier} isTierFixed={!scenario.tierSensitive} />
 
                   {/* Fine print */}
                   <p className="text-[11px] md:text-xs text-gray-400 font-light leading-relaxed text-center italic max-w-xs">
                     {scenario.clarifying}{" "}
-                    <button onClick={() => setShowMath(true)} className="underline underline-offset-2 hover:text-black transition-colors not-italic">
-                      Show me the math →
+                    <button onClick={() => setShowMath(true)} className="underline underline-offset-2 hover:text-black transition-colors not-italic font-medium">
+                      Wait, how did we get these numbers? →
                     </button>
                   </p>
                 </>
@@ -971,14 +997,14 @@ export default function Home() {
             <AnimatePresence>
               {!showCompare && (
                 <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}>
-                  <SideTab onClick={() => setShowCompare(true)} label="compare tasks" bg="#333333" icon={<BarChart2 size={15} color="rgba(255,255,255,0.85)" />} />
+                  <SideTab onClick={() => setShowCompare(true)} label="compare" bg="#333333" icon={<BarChart2 size={15} color="rgba(255,255,255,0.85)" />} />
                 </motion.div>
               )}
             </AnimatePresence>
             <AnimatePresence>
               {!showAction && (
                 <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}>
-                  <SideTab onClick={() => setShowAction(true)} label="take action" bg="#333333" icon={<Sparkles size={15} color="rgba(255,255,255,0.85)" />} />
+                  <SideTab onClick={() => setShowAction(true)} label="what can I do?" bg="#333333" icon={<Sparkles size={15} color="rgba(255,255,255,0.85)" />} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -989,28 +1015,35 @@ export default function Home() {
       {/* Bottom bar — three evenly spaced buttons on mobile, left+right layout on desktop */}
       <div className="flex-shrink-0 border-t border-gray-100 px-3 md:px-10 py-3 md:py-4">
         {/* Mobile: three pill buttons side by side */}
-        <div className="flex md:hidden items-center gap-2 justify-between">
+        <div className="flex md:hidden items-center gap-2 justify-between mb-3">
           <button onClick={() => setShowSources(true)}
-            className="flex-1 text-xs font-medium text-gray-600 border border-gray-300 rounded-full px-3 py-2 text-center">
-            Sources
+            className="flex-1 text-[11px] font-medium text-gray-600 border border-gray-300 rounded-full px-2 py-2 text-center">
+            About
           </button>
           <button onClick={() => setShowCompare(true)}
-            className="flex-1 text-xs font-medium text-gray-600 border border-gray-300 rounded-full px-3 py-2 text-center">
+            className="flex-1 text-[11px] font-medium text-gray-600 border border-gray-300 rounded-full px-2 py-2 text-center">
             Compare
           </button>
           <button onClick={() => setShowAction(true)}
-            className="flex-1 text-xs font-medium text-gray-600 border border-gray-300 rounded-full px-3 py-2 text-center">
-            Take action
+            className="flex-1 text-[11px] font-medium text-gray-600 border border-gray-300 rounded-full px-2 py-2 text-center">
+            Take Action
           </button>
         </div>
+        
+        <p className="md:hidden text-[11px] text-gray-800 font-semibold text-center leading-relaxed">
+          This is an exploratory work in progress to visualize AI's environmental impact.<br />
+          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-black font-medium">Help improve the methods and calculations on GitHub</a>
+        </p>
+
         {/* Desktop: sources left, info text right */}
         <div className="hidden md:flex items-center justify-between">
           <button onClick={() => setShowSources(true)}
             className="text-xs font-medium text-gray-600 hover:text-black transition-colors border border-gray-300 hover:border-gray-600 rounded-full px-5 py-2 shadow-sm hover:shadow-md">
-            Sources & methodology
+            About this experiment & sources
           </button>
-          <p className="text-[10px] text-gray-300 italic font-light text-right max-w-[220px] leading-relaxed">
-            Varies by model, data center & region. Standard energy = Google Cloud 2025 (Aug).
+          <p className="text-[11px] text-gray-800 font-semibold text-right max-w-[420px] leading-relaxed">
+            This is an exploratory work in progress to visualize AI's impact. Estimates vary heavily by model, data center & region. Standard = Google Cloud 2025 (Aug).<br />
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-black transition-colors">Help improve the methods and calculations on GitHub</a>
           </p>
         </div>
       </div>
