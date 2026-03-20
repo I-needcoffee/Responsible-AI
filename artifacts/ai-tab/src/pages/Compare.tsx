@@ -28,7 +28,7 @@ function SingleMetricChart({
   icon: any;
   barColor: string;
   secondBarColor: string;
-  dataKey: (task: any) => { low: number | null; mid: number | null; high: number | null } | null;
+  dataKey: (task: any) => { low: number | null; mid: number | null; high: number | null; dataExists?: boolean } | null;
   data: { a: any; b: any };
   taskAName: string;
   taskBName: string;
@@ -173,8 +173,8 @@ export default function Compare() {
     );
   }
 
-  const taskA = safeTasks.find((t) => t.id === taskAId);
-  const taskB = safeTasks.find((t) => t.id === taskBId);
+  const taskA = safeTasks.find((t: any) => t.id === taskAId);
+  const taskB = safeTasks.find((t: any) => t.id === taskBId);
   const nameA = taskA?.name ?? "Task A";
   const nameB = taskB?.name ?? "Task B";
 
@@ -200,7 +200,7 @@ export default function Compare() {
             value={taskAId}
             onChange={(e) => setTaskAId(e.target.value)}
           >
-            {safeTasks.map((t) => (
+            {safeTasks.map((t: any) => (
               <option key={`A-${t.id}`} value={t.id}>{t.name}</option>
             ))}
           </select>
@@ -220,7 +220,7 @@ export default function Compare() {
             value={taskBId}
             onChange={(e) => setTaskBId(e.target.value)}
           >
-            {safeTasks.map((t) => (
+            {safeTasks.map((t: any) => (
               <option key={`B-${t.id}`} value={t.id}>{t.name}</option>
             ))}
           </select>

@@ -19,7 +19,7 @@ export default function Sources() {
 
   const safeSources = sources || [];
 
-  const filtered = safeSources.filter(s => {
+  const filtered = safeSources.filter((s: any) => {
     const matchesCat = category === "all" || s.category === category;
     const matchesSearch = s.title.toLowerCase().includes(search.toLowerCase()) || 
                           s.institution.toLowerCase().includes(search.toLowerCase());
@@ -61,7 +61,7 @@ export default function Sources() {
 
       <div className="flex flex-col gap-6">
         {filtered.length > 0 ? (
-          filtered.map((source, i) => (
+          filtered.map((source: any, i: number) => (
             <motion.div
               key={source.id}
               initial={{ opacity: 0, y: 20 }}
