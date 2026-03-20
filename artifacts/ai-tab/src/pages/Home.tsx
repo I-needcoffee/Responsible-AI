@@ -489,7 +489,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
   const selected = options.find(o => o.id === value) ?? options[0];
 
   return (
-    <span className="relative inline-flex items-stretch h-full">
+    <span className="inline-flex items-stretch h-full">
       <button onClick={() => setOpen(v => !v)}
         className="cursor-pointer inline-flex items-center gap-2 font-semibold transition-all hover:bg-gray-50 active:bg-gray-100 rounded-l-[100px] focus:outline-none"
         style={{
@@ -508,11 +508,11 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
       <AnimatePresence>
         {open && (
           <>
-            <span className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
+            <span className="fixed inset-0 z-50" onClick={() => setOpen(false)} />
             <motion.div
               initial={{ opacity: 0, y: -4, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }} transition={{ duration: 0.12 }}
-              className="absolute top-full left-1/2 -translate-x-1/2 mt-3 bg-white border border-gray-200 rounded-3xl shadow-2xl z-30 p-4 max-h-[75vh] overflow-y-auto w-[90vw] max-w-[800px] text-left"
+              className="absolute top-full left-1/2 -translate-x-1/2 mt-3 bg-white border border-gray-200 rounded-3xl shadow-2xl z-[60] p-4 max-h-[75vh] overflow-y-auto w-[90vw] max-w-[800px] text-left"
               style={{ fontFamily: "'Anthropic Sans', sans-serif", fontSize: "14px" }}>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
