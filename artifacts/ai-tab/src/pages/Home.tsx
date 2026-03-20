@@ -1083,12 +1083,12 @@ function GetInvolvedModal({ onClose }: { onClose: () => void }) {
           <div className="flex flex-col gap-3">
             <h3 className="text-lg font-semibold text-gray-900">Support the Project</h3>
             <p className="text-sm text-gray-600 leading-relaxed">
-              If you found this tool helpful and want to support future updates, you can buy me a coffee here.
+              If you found this tool helpful and want to support future updates, you can buy me a coffee on Venmo.
             </p>
-            <a href="https://buymeacoffee.com/Ineedcoffee" target="_blank" rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center justify-center gap-2 bg-[#FFDD00] text-amber-900 font-semibold px-5 py-2.5 rounded-full shadow-sm hover:shadow-md hover:bg-[#ffea4d] transition-all self-start">
+            <a href="https://account.venmo.com/u/Tim_Meyers" target="_blank" rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center justify-center gap-2 bg-[#008CFF] text-white font-semibold px-5 py-2.5 rounded-full shadow-sm hover:shadow-md hover:bg-[#007AE6] transition-all self-start">
               <Coffee size={16} />
-              Buy me a coffee
+              Support on Venmo
             </a>
           </div>
         </div>
