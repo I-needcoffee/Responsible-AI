@@ -1085,11 +1085,18 @@ function GetInvolvedModal({ onClose }: { onClose: () => void }) {
             <p className="text-sm text-gray-600 leading-relaxed">
               If you found this tool helpful and want to support future updates, you can buy me a coffee on Venmo.
             </p>
-            <a href="https://account.venmo.com/u/Tim_Meyers" target="_blank" rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center justify-center gap-2 bg-[#008CFF] text-white font-semibold px-5 py-2.5 rounded-full shadow-sm hover:shadow-md hover:bg-[#007AE6] transition-all self-start">
-              <Coffee size={16} />
-              Support on Venmo
-            </a>
+            <div className="flex flex-wrap gap-3 mt-2">
+              <a href="https://account.venmo.com/u/Tim_Meyers" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-[#008CFF] text-white font-semibold px-5 py-2.5 rounded-full shadow-sm hover:shadow-md hover:bg-[#007AE6] transition-all">
+                <Coffee size={16} />
+                Venmo
+              </a>
+              <a href="https://paypal.me/coffee4tim" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-[#003087] text-white font-semibold px-5 py-2.5 rounded-full shadow-sm hover:shadow-md hover:bg-[#001C4F] transition-all">
+                <Coffee size={16} />
+                PayPal
+              </a>
+            </div>
           </div>
         </div>
       </motion.div>
