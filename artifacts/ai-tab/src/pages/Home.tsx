@@ -1083,7 +1083,7 @@ function GetInvolvedModal({ onClose }: { onClose: () => void }) {
           <div className="flex flex-col gap-3">
             <h3 className="text-lg font-semibold text-gray-900">Support the Project</h3>
             <p className="text-sm text-gray-600 leading-relaxed">
-              If you found this tool helpful and want to support future updates, you can buy me a coffee on Venmo.
+              If you found this tool helpful and want to support future updates, you can buy me a coffee on Venmo or PayPal.
             </p>
             <div className="flex flex-wrap gap-3 mt-2">
               <a href="https://account.venmo.com/u/Tim_Meyers" target="_blank" rel="noopener noreferrer"
