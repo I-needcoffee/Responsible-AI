@@ -464,66 +464,59 @@ function fmtOffset(v: number, u: string) {
 }
 // ─── COMPARABLE UNITS ─────────────────────────────────────────────────────────
 const ENERGY_COMPARABLES = [
-  { id: "netflix",    label: "Netflix streaming",   unitWh: 0.8,    unit: (n: number) => n < 1/60 ? `${Math.round(n*3600)} seconds` : n < 1 ? `${Math.round(n*60)} seconds` : n < 60 ? `${Math.round(n)} minutes` : n < 1440 ? `${(n/60).toFixed(1)} hours` : `${(n/60/24).toFixed(1)} days`, suffix: "of Netflix" },
-  { id: "led",        label: "LED bulb (10W)",       unitWh: 10,     unit: (n: number) => n < 1 ? `${Math.round(n*60)} minutes` : n < 24 ? `${n.toFixed(1)} hours` : `${(n/24).toFixed(1)} days`, suffix: "of a 10W LED bulb" },
-  { id: "microwave",  label: "Microwave (1000W)",    unitWh: 1000,   unit: (n: number) => n < 1/60 ? `${(n*3600).toFixed(1)} seconds` : n < 1 ? `${(n*60).toFixed(1)} minutes` : `${n.toFixed(1)} hours`, suffix: "of microwaving" },
-  { id: "ebike",      label: "E-bike miles",          unitWh: 15,     unit: (n: number) => n < 1 ? `${(n * 5280).toFixed(0)} feet` : `${n.toFixed(1)} miles`, suffix: "on an e-bike" },
-  { id: "ev",         label: "Electric car miles",    unitWh: 300,    unit: (n: number) => n < 0.1 ? `${Math.round(n*5280)} feet` : `${n.toFixed(1)} miles`, suffix: "in an EV" },
-  { id: "phone",      label: "Phone charges",         unitWh: 12,     unit: (n: number) => n < 1 ? `${(n*100).toFixed(0)}%` : `${n.toFixed(1)}`, suffix: n => n < 1 ? " of a phone charge" : " phone charges" },
-  { id: "laptop",     label: "Laptop charges",        unitWh: 60,     unit: (n: number) => n < 1 ? `${(n*100).toFixed(0)}%` : `${n.toFixed(1)}`, suffix: n => n < 1 ? " of a laptop charge" : " laptop charges" },
-] as const;
+  { id: "netflix",    label: "hours of Netflix",     unitWh: 0.8 * 60, fmt: (n: number) => n < 0.1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString() },
+  { id: "microwave",  label: "minutes of microwaving", unitWh: 1000 / 60, fmt: (n: number) => n < 0.1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString() },
+  { id: "ebike",      label: "miles on an e-bike",   unitWh: 15,    fmt: (n: number) => n < 0.1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString() },
+  { id: "phone",      label: "smartphone charges",   unitWh: 12,    fmt: (n: number) => n < 0.1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString() },
+  { id: "ev",         label: "miles in an EV",       unitWh: 300,   fmt: (n: number) => n < 0.1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString() },
+];
 
 const WATER_COMPARABLES = [
-  { id: "handwash",   label: "Handwashes (110 mL)",   unitMl: 110,    unit: (n: number) => n >= 10000 ? `${(n/1000).toFixed(1)}K` : n >= 1 ? `${Math.round(n).toLocaleString()}` : n >= 0.1 ? `${n.toFixed(1)} of a` : n > 0 ? `${n.toFixed(2)} of a` : "0", suffix: n => n >= 1 ? (Math.round(n)===1 ? " handwash" : " handwashes") : " handwash" },
-  { id: "sip",        label: "Sips of water (30 mL)",  unitMl: 30,     unit: (n: number) => n >= 1 ? `${Math.round(n).toLocaleString()}` : `${n.toFixed(1)}`, suffix: n => Math.round(n)===1 ? " sip of water" : " sips of water" },
-  { id: "glass",      label: "Glasses (250 mL)",       unitMl: 250,    unit: (n: number) => n >= 1 ? `${Math.round(n).toLocaleString()}` : `${n.toFixed(2)} of a`, suffix: n => n >= 1 ? (Math.round(n)===1 ? " glass of water" : " glasses of water") : " glass of water" },
-  { id: "bottle",     label: "Water bottles (500 mL)",  unitMl: 500,    unit: (n: number) => n >= 1 ? `${n.toFixed(1)}` : `${(n*100).toFixed(0)}% of a`, suffix: n => n >= 1 ? " water bottles" : " water bottle" },
-  { id: "shower",     label: "Showers (65 L)",          unitMl: 65000,  unit: (n: number) => n >= 1 ? `${n.toFixed(1)}` : n >= 0.01 ? `${(n*100).toFixed(1)}% of a` : `${(n*100).toFixed(2)}% of a`, suffix: n => n >= 1 ? " showers" : " shower" },
-  { id: "bath",       label: "Baths (150 L)",           unitMl: 150000, unit: (n: number) => n >= 1 ? `${n.toFixed(1)}` : n >= 0.01 ? `${(n*100).toFixed(1)}% of a` : `${(n*100).toFixed(2)}% of a`, suffix: n => n >= 1 ? " baths" : " bath" },
-  { id: "pool",       label: "Swimming pools (75K L)",  unitMl: 75000000, unit: (n: number) => `${n.toFixed(n < 0.001 ? 6 : 4)}`, suffix: " swimming pools" },
-] as const;
+  { id: "handwash",   label: "handwashes",           unitMl: 110,   fmt: (n: number) => n >= 10000 ? `${(n/1000).toFixed(1)}K` : n < 0.1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString() },
+  { id: "bottle",     label: "water bottles",        unitMl: 500,   fmt: (n: number) => n < 0.1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString() },
+  { id: "glass",      label: "glasses of water",     unitMl: 250,   fmt: (n: number) => n < 0.1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString() },
+  { id: "shower",     label: "showers",              unitMl: 65000, fmt: (n: number) => n < 0.01 ? n.toFixed(4) : n < 0.1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString() },
+  { id: "bath",       label: "baths",                unitMl: 150000,fmt: (n: number) => n < 0.01 ? n.toFixed(4) : n < 0.1 ? n.toFixed(2) : n < 10 ? n.toFixed(1) : Math.round(n).toLocaleString() },
+];
 
-function equivEnergy(wh: number, compId: string): string {
+function equivEnergyVal(wh: number, compId: string): string {
   const comp = ENERGY_COMPARABLES.find(c => c.id === compId) ?? ENERGY_COMPARABLES[0];
-  const n = wh / comp.unitWh;
-  const valStr = comp.unit(n);
-  const suf = typeof comp.suffix === 'function' ? comp.suffix(n) : ` ${comp.suffix}`;
-  return `${valStr}${suf}`;
+  return comp.fmt(wh / comp.unitWh);
 }
-function equivWater(ml: number, compId: string): string {
+function equivWaterVal(ml: number, compId: string): string {
   const comp = WATER_COMPARABLES.find(c => c.id === compId) ?? WATER_COMPARABLES[0];
-  const n = ml / comp.unitMl;
-  const valStr = comp.unit(n);
-  const suf = typeof comp.suffix === 'function' ? comp.suffix(n) : comp.suffix;
-  return `${valStr}${suf}`;
+  return comp.fmt(ml / comp.unitMl);
+}
+function getCompLabel(comparables: typeof ENERGY_COMPARABLES | typeof WATER_COMPARABLES, id: string): string {
+  return comparables.find(c => c.id === id)?.label ?? comparables[0].label;
 }
 
 function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
-  // Dark Green (0 Wh) → Light Blue (1 Wh) → Golden Yellow (500 Wh) → Burnt Orange (1000 Wh) → Deep Red (>1000 Wh)
+  // Very Deep Green (0 Wh) → Light Green (1 Wh) → Golden Yellow (500 Wh) → Burnt Orange (1000 Wh) → Deep Red (>1000 Wh)
   if (wh >= 1000) return { r: 180, g: 40, b: 0 };
-  if (wh <= 0)    return { r: 22,  g: 120, b: 52 };  // Dark green
+  if (wh <= 0)    return { r: 10,  g: 60, b: 25 };  // Very deep green
 
-  const dkGreen = { r: 22,  g: 120, b: 52  }; // Dark green
-  const ltBlue  = { r: 147, g: 197, b: 253 }; // Light blue
+  const dkGreen = { r: 10,  g: 60,  b: 25  }; // Very deep green
+  const ltGreen = { r: 180, g: 230, b: 195 }; // Light green (hue-matched)
   const golden  = { r: 253, g: 186, b: 0   }; // Golden yellow
   const burnt   = { r: 214, g: 90,  b: 0   }; // Burnt orange
 
-  // 0 → 1 Wh: dark green → light blue
+  // 0 → 1 Wh: very deep green → light green
   if (wh <= 1) {
     const t = wh;
     return {
-      r: Math.round(dkGreen.r + (ltBlue.r - dkGreen.r) * t),
-      g: Math.round(dkGreen.g + (ltBlue.g - dkGreen.g) * t),
-      b: Math.round(dkGreen.b + (ltBlue.b - dkGreen.b) * t),
+      r: Math.round(dkGreen.r + (ltGreen.r - dkGreen.r) * t),
+      g: Math.round(dkGreen.g + (ltGreen.g - dkGreen.g) * t),
+      b: Math.round(dkGreen.b + (ltGreen.b - dkGreen.b) * t),
     };
   }
-  // 1 → 500 Wh: light blue → golden yellow
+  // 1 → 500 Wh: light green → golden yellow
   if (wh <= 500) {
     const t = (wh - 1) / 499;
     return {
-      r: Math.round(ltBlue.r + (golden.r - ltBlue.r) * t),
-      g: Math.round(ltBlue.g + (golden.g - ltBlue.g) * t),
-      b: Math.round(ltBlue.b + (golden.b - ltBlue.b) * t),
+      r: Math.round(ltGreen.r + (golden.r - ltGreen.r) * t),
+      g: Math.round(ltGreen.g + (golden.g - ltGreen.g) * t),
+      b: Math.round(ltGreen.b + (golden.b - ltGreen.b) * t),
     };
   }
   // 500 → 1000 Wh: golden yellow → burnt orange
@@ -533,6 +526,47 @@ function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
     g: Math.round(golden.g + (burnt.g - golden.g) * t),
     b: Math.round(golden.b + (burnt.b - golden.b) * t),
   };
+}
+
+// ─── COMPARABLE DROPDOWN ───────────────────────────────────────────────────
+function ComparableDropdown({ value, onChange, options }: { value: string; onChange: (id: string) => void; options: readonly { id: string; label: string }[] }) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find(o => o.id === value) ?? options[0];
+
+  return (
+    <span className="relative inline-flex items-center">
+      <button onClick={() => setOpen(v => !v)}
+        className="cursor-pointer inline-flex items-center gap-1.5 transition-all outline-none text-gray-500 hover:text-gray-700"
+        style={{ fontFamily: "'Anthropic Serif', serif" }}>
+        <span>{selected.label}</span>
+        <svg width="10" height="6" viewBox="0 0 12 8" fill="none" style={{ opacity: 0.6, flexShrink: 0, marginTop: 2 }}>
+          <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <>
+            <span className="fixed inset-0 z-50" onClick={() => setOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -4, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.97 }} transition={{ duration: 0.12 }}
+              className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-[60] p-2 min-w-[200px] flex flex-col gap-1"
+              style={{ fontFamily: "'Anthropic Sans', sans-serif", fontSize: "14px" }}>
+              {options.map(o => {
+                const isSelected = o.id === value;
+                return (
+                  <button key={o.id} onClick={() => { onChange(o.id); setOpen(false); }}
+                    className={`text-left px-3 py-2 rounded-xl transition-colors ${isSelected ? "bg-gray-100 font-bold" : "hover:bg-gray-50 font-medium"} text-gray-700`}>
+                    {o.label}
+                  </button>
+                );
+              })}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </span>
+  );
 }
 
 // ─── INLINE PILL DROPDOWN ────────────────────────────────────────────────────
@@ -636,7 +670,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                 <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
                   <span>Energy:</span>
                   <span>0 Wh</span>
-                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(22,120,52) 0%, rgb(147,197,253) 3%, rgb(253,186,0) 50%, rgb(214,90,0) 100%)" }}></div>
+                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(10,60,25) 0%, rgb(180,230,195) 3%, rgb(253,186,0) 50%, rgb(214,90,0) 100%)" }}></div>
                   <span>1 kWh</span>
                   <div className="w-2 h-2 rounded-full ml-1" style={{ background: 'rgb(180,40,0)' }}></div>
                   <span>&gt;100 kWh</span>
@@ -814,7 +848,7 @@ function CustomCalculator({ counts, onChange, totalE, totalW }: {
               of water.
             </p>
             <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
-              That's {equivEnergy(totalE)} and {equivWater(totalW)}.
+              That's {equivEnergyVal(totalE, "netflix")} of Netflix and {equivWaterVal(totalW, "handwash")} handwashes.
             </p>
           </>
         }
@@ -1298,7 +1332,7 @@ export default function Home() {
                   <div className="flex flex-col items-center gap-3 text-[1.15rem] sm:text-[1.35rem] md:text-[1.65rem] leading-[1.5] text-black text-center"
                     style={{ fontFamily: "'Anthropic Serif', serif" }}>
                     
-                    <div>
+                    <div className="flex flex-col items-center gap-2">
                       {(() => {
                         const rgb = getEnergyColorRgb(energyWh);
                         const pillStyle = {
@@ -1311,10 +1345,7 @@ export default function Home() {
                           <span style={pillStyle} className="inline-flex items-stretch flex-wrap justify-center bg-white border-2 rounded-[100px] hover:shadow-lg transition-all relative">
                             <InlineDropdown value={selectedId} onChange={setSelectedId} />
                             <div className="w-px bg-gray-200 my-2" />
-                            <div className="relative flex items-stretch">
-                              <InlineMultiplier value={multiplier} onChange={setMultiplier} />
-                              <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-gray-400 font-medium whitespace-nowrap pointer-events-none">multiplier</span>
-                            </div>
+                            <InlineMultiplier value={multiplier} onChange={setMultiplier} />
                           </span>
                         );
                       })()}
@@ -1329,27 +1360,16 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Secondary: equivalency with selectable comparables */}
-                  <div className="text-sm md:text-[1.1rem] leading-[1.7] text-gray-500 text-center mt-1 mb-2 flex flex-wrap items-center justify-center gap-x-1.5"
+                  {/* Secondary: equivalency — comparable words ARE the dropdowns */}
+                  <div className="text-[0.95rem] sm:text-[1.05rem] md:text-[1.15rem] leading-[1.6] text-gray-500 text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-4"
                     style={{ fontFamily: "'Anthropic Serif', serif" }}>
                     <span>That's</span>
-                    <span className="inline-flex items-center gap-1">
-                      <span>{equivEnergy(energyWh, energyComp)}</span>
-                      <select value={energyComp} onChange={e => setEnergyComp(e.target.value)}
-                        className="text-[10px] text-gray-400 bg-transparent border-b border-gray-300 border-dashed cursor-pointer focus:outline-none hover:text-gray-600 hover:border-gray-400 transition-colors appearance-none pl-0.5 pr-3"
-                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%23999' fill='none' stroke-width='1.2'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 2px center' }}>
-                        {ENERGY_COMPARABLES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                      </select>
-                    </span>
+                    <span className="font-medium text-gray-500">{equivEnergyVal(energyWh, energyComp)}</span>
+                    <ComparableDropdown value={energyComp} onChange={setEnergyComp} options={ENERGY_COMPARABLES} />
                     <span>and</span>
-                    <span className="inline-flex items-center gap-1">
-                      <span>{equivWater(waterMl, waterComp)}</span>
-                      <select value={waterComp} onChange={e => setWaterComp(e.target.value)}
-                        className="text-[10px] text-gray-400 bg-transparent border-b border-gray-300 border-dashed cursor-pointer focus:outline-none hover:text-gray-600 hover:border-gray-400 transition-colors appearance-none pl-0.5 pr-3"
-                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%23999' fill='none' stroke-width='1.2'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 2px center' }}>
-                        {WATER_COMPARABLES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-                      </select>
-                    </span>
+                    <span className="font-medium text-gray-500">{equivWaterVal(waterMl, waterComp)}</span>
+                    <ComparableDropdown value={waterComp} onChange={setWaterComp} options={WATER_COMPARABLES} />
+                    <span>.</span>
                   </div>
 
                   {/* Tertiary: selectors */}
