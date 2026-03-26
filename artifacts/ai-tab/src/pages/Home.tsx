@@ -674,17 +674,23 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-1 w-full max-w-[220px] mt-2 sm:mt-0">
-                  <div className="flex justify-between items-end text-[9px] font-bold text-gray-400 capitalize px-1 leading-none">
-                    <span className="text-left w-[35%]">0</span>
-                    <span className="text-center w-auto whitespace-nowrap">3 Wh</span>
-                    <span className="text-right w-[60%] pr-4">1 kWh</span>
+                <div className="flex items-end gap-3 w-full max-w-[260px] mt-2 sm:mt-0">
+                  <div className="flex flex-col gap-1 flex-1">
+                    <div className="flex justify-between items-end text-[9px] font-bold text-gray-400 capitalize px-1 leading-none">
+                      <span className="text-left w-[35%]">0</span>
+                      <span className="text-center w-auto whitespace-nowrap">3 Wh</span>
+                      <span className="text-right flex-1 pr-1">1 kWh</span>
+                    </div>
+                    <div className="flex w-full h-2 rounded-full overflow-hidden">
+                      <div className="w-[35%] h-full" style={{ background: "linear-gradient(to right, rgb(15,50,35), rgb(245,230,80))" }} />
+                      <div className="w-[2px] bg-white h-full shrink-0" />
+                      <div className="flex-1 h-full" style={{ background: "linear-gradient(to right, rgb(245,230,80) 0%, rgb(235,190,30) 40%, rgb(225,110,30) 100%)" }} />
+                    </div>
                   </div>
-                  <div className="flex w-full h-2 rounded-full overflow-hidden relative">
-                    <div className="w-[35%] h-full" style={{ background: "linear-gradient(to right, rgb(15,50,35), rgb(245,230,80))" }} />
-                    <div className="w-[2px] bg-white h-full z-10" />
-                    <div className="w-[65%] h-full" style={{ background: "linear-gradient(to right, rgb(245,230,80) 0%, rgb(235,190,30) 40%, rgb(225,110,30) 100%)" }} />
-                    <div className="absolute -right-3 top-0 w-2 h-2 rounded-full border border-white z-20" style={{ background: 'rgb(225,50,35)' }} title=">100 kWh" />
+                  
+                  <div className="flex flex-col items-center gap-1 shrink-0">
+                    <span className="text-[9px] font-bold text-gray-400 leading-none">&gt;100 kWh</span>
+                    <div className="w-2 h-2 rounded-full mb-0" style={{ background: 'rgb(225,50,35)' }} />
                   </div>
                 </div>
               </div>
