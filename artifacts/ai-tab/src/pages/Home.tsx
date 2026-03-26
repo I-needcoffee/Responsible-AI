@@ -494,25 +494,25 @@ function getCompLabel(comparables: typeof ENERGY_COMPARABLES | typeof WATER_COMP
 function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
   // Very Deep Green (0 Wh) → Light Green (1 Wh) → Golden Yellow (500 Wh) → Burnt Orange (1000 Wh) → Deep Red (>1000 Wh)
   if (wh >= 1000) return { r: 225, g: 50, b: 35 }; // Deep red-orange
-  if (wh <= 0)    return { r: 15,  g: 45, b: 40 }; // Very dark slate green
+  if (wh <= 0)    return { r: 15,  g: 50, b: 35 }; // Dark forest green
 
-  const dkGreen = { r: 15,  g: 45,  b: 40  }; // Very dark slate green
-  const ltGreen = { r: 70,  g: 200, b: 100 }; // Bright pure spring green
+  const dkGreen = { r: 15,  g: 50,  b: 35  }; // Dark forest green
+  const ltGreen = { r: 245, g: 230, b: 80  }; // Light yellow
   const golden  = { r: 235, g: 190, b: 30  }; // Golden yellow
   const burnt   = { r: 225, g: 110, b: 30  }; // Warm orange
 
-  // 0 → 1 Wh: very deep green → light green
-  if (wh <= 1) {
-    const t = wh;
+  // 0 → 3 Wh: very deep green → light yellow
+  if (wh <= 3) {
+    const t = wh / 3;
     return {
       r: Math.round(dkGreen.r + (ltGreen.r - dkGreen.r) * t),
       g: Math.round(dkGreen.g + (ltGreen.g - dkGreen.g) * t),
       b: Math.round(dkGreen.b + (ltGreen.b - dkGreen.b) * t),
     };
   }
-  // 1 → 500 Wh: light green → golden yellow
+  // 3 → 500 Wh: light yellow → golden yellow
   if (wh <= 500) {
-    const t = (wh - 1) / 499;
+    const t = (wh - 3) / 497;
     return {
       r: Math.round(ltGreen.r + (golden.r - ltGreen.r) * t),
       g: Math.round(ltGreen.g + (golden.g - ltGreen.g) * t),
@@ -677,7 +677,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                 <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
                   <span>Energy:</span>
                   <span>0 Wh</span>
-                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(15,45,40) 0%, rgb(70,200,100) 3%, rgb(235,190,30) 50%, rgb(225,110,30) 100%)" }}></div>
+                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(15,50,35) 0%, rgb(245,230,80) 3%, rgb(235,190,30) 50%, rgb(225,110,30) 100%)" }}></div>
                   <span>1 kWh</span>
                   <div className="w-2 h-2 rounded-full ml-1" style={{ background: 'rgb(225,50,35)' }}></div>
                   <span>&gt;100 kWh</span>
