@@ -493,13 +493,13 @@ function getCompLabel(comparables: typeof ENERGY_COMPARABLES | typeof WATER_COMP
 
 function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
   // Very Deep Green (0 Wh) → Light Green (1 Wh) → Golden Yellow (500 Wh) → Burnt Orange (1000 Wh) → Deep Red (>1000 Wh)
-  if (wh >= 1000) return { r: 180, g: 40, b: 0 };
-  if (wh <= 0)    return { r: 10,  g: 60, b: 25 };  // Very deep green
+  if (wh >= 1000) return { r: 224, g: 53, b: 37 }; // Deep red-orange
+  if (wh <= 0)    return { r: 31,  g: 79, b: 70 }; // Slate green
 
-  const dkGreen = { r: 10,  g: 60,  b: 25  }; // Very deep green
-  const ltGreen = { r: 180, g: 230, b: 195 }; // Light green (hue-matched)
-  const golden  = { r: 253, g: 186, b: 0   }; // Golden yellow
-  const burnt   = { r: 214, g: 90,  b: 0   }; // Burnt orange
+  const dkGreen = { r: 31,  g: 79,  b: 70  }; // Slate green
+  const ltGreen = { r: 78,  g: 124, b: 62  }; // Olive/moss green
+  const golden  = { r: 216, g: 173, b: 31  }; // Muted golden yellow
+  const burnt   = { r: 224, g: 122, b: 33  }; // Warm orange
 
   // 0 → 1 Wh: very deep green → light green
   if (wh <= 1) {
@@ -641,38 +641,45 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                   </div>
                 ))}
               </div>
-              <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-100">
+                <div className="flex flex-wrap items-center gap-3">
                   <button onClick={() => { onChange("custom"); setOpen(false); }}
-                    className={`px-5 py-2 rounded-full transition-all border text-[12px] ${"custom" === value ? "bg-white border-black border-2 font-bold text-black shadow-sm" : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-medium text-gray-700 shadow-sm"}`}>
+                    className={`px-4 py-1.5 rounded-xl transition-all border text-[13px] ${"custom" === value ? "bg-white border-black border-2 font-bold text-black shadow-sm" : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-medium text-gray-700 shadow-sm"}`}>
                     Custom
                   </button>
-                  {/* Typical usage circle buttons */}
-                  {[{id: "typical-daily", icon: "D", tip: "Typical day"}, {id: "typical-weekly", icon: "W", tip: "Typical week"}, {id: "typical-monthly", icon: "M", tip: "Typical month"}].map(p => {
-                    const sc = SCENARIOS.find(s => s.id === p.id);
-                    const e = sc ? getEnergyWh(sc.id, sc.baseEnergyWh, "commercial") : 0;
-                    const rgb = getEnergyColorRgb(e);
-                    const isSelected = value === p.id;
-                    return (
-                      <button key={p.id} title={p.tip}
-                        onClick={() => { onChange(p.id); setOpen(false); }}
-                        className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold transition-all border-2 shrink-0 ${isSelected ? 'shadow-md scale-110' : 'hover:scale-105'}`}
-                        style={{
-                          backgroundColor: isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.12)`,
-                          borderColor: isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.8)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`,
-                          color: `rgb(${Math.max(0,rgb.r-30)},${Math.max(0,rgb.g-30)},${Math.max(0,rgb.b-30)})`,
-                        }}>
-                        {p.icon}
-                      </button>
-                    );
-                  })}
+
+                  <div className="h-6 w-px bg-gray-200 hidden sm:block" />
+
+                  {/* Typical usage distinct buttons */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mr-1">Averages:</span>
+                    {[{id: "typical-daily", label: "Daily"}, {id: "typical-weekly", label: "Weekly"}, {id: "typical-monthly", label: "Monthly"}].map(p => {
+                      const sc = SCENARIOS.find(s => s.id === p.id);
+                      const e = sc ? getEnergyWh(sc.id, sc.baseEnergyWh, "commercial") : 0;
+                      const rgb = getEnergyColorRgb(e);
+                      const isSelected = value === p.id;
+                      return (
+                        <button key={p.id}
+                          onClick={() => { onChange(p.id); setOpen(false); }}
+                          className={`px-3 py-1.5 rounded-xl text-[12px] transition-all flex items-center gap-1.5 border ${isSelected ? 'font-bold shadow-md bg-white' : 'font-medium hover:bg-gray-50 text-gray-600 bg-white'}`}
+                          style={isSelected ? {
+                            color: `rgb(${Math.max(0,rgb.r-40)},${Math.max(0,rgb.g-40)},${Math.max(0,rgb.b-40)})`,
+                            borderColor: `rgba(${rgb.r},${rgb.g},${rgb.b},0.6)`
+                          } : { borderColor: '#e5e7eb' }}>
+                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: `rgb(${rgb.r},${rgb.g},${rgb.b})` }} />
+                          {p.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+
                 <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
                   <span>Energy:</span>
                   <span>0 Wh</span>
-                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(10,60,25) 0%, rgb(180,230,195) 3%, rgb(253,186,0) 50%, rgb(214,90,0) 100%)" }}></div>
+                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(31,79,70) 0%, rgb(78,124,62) 3%, rgb(216,173,31) 50%, rgb(224,122,33) 100%)" }}></div>
                   <span>1 kWh</span>
-                  <div className="w-2 h-2 rounded-full ml-1" style={{ background: 'rgb(180,40,0)' }}></div>
+                  <div className="w-2 h-2 rounded-full ml-1" style={{ background: 'rgb(224,53,37)' }}></div>
                   <span>&gt;100 kWh</span>
                 </div>
               </div>
