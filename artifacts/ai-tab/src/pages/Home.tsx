@@ -497,7 +497,7 @@ function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
   if (wh <= 0)    return { r: 15,  g: 45, b: 40 }; // Very dark slate green
 
   const dkGreen = { r: 15,  g: 45,  b: 40  }; // Very dark slate green
-  const ltGreen = { r: 140, g: 190, b: 70  }; // Bright olive/lime
+  const ltGreen = { r: 70,  g: 200, b: 100 }; // Bright pure spring green
   const golden  = { r: 235, g: 190, b: 30  }; // Golden yellow
   const burnt   = { r: 225, g: 110, b: 30  }; // Warm orange
 
@@ -677,7 +677,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                 <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
                   <span>Energy:</span>
                   <span>0 Wh</span>
-                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(15,45,40) 0%, rgb(140,190,70) 3%, rgb(235,190,30) 50%, rgb(225,110,30) 100%)" }}></div>
+                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(15,45,40) 0%, rgb(70,200,100) 3%, rgb(235,190,30) 50%, rgb(225,110,30) 100%)" }}></div>
                   <span>1 kWh</span>
                   <div className="w-2 h-2 rounded-full ml-1" style={{ background: 'rgb(225,50,35)' }}></div>
                   <span>&gt;100 kWh</span>
