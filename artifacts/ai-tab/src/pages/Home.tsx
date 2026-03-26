@@ -674,13 +674,18 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
-                  <span>Energy:</span>
-                  <span>0 Wh</span>
-                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(15,50,35) 0%, rgb(245,230,80) 3%, rgb(235,190,30) 50%, rgb(225,110,30) 100%)" }}></div>
-                  <span>1 kWh</span>
-                  <div className="w-2 h-2 rounded-full ml-1" style={{ background: 'rgb(225,50,35)' }}></div>
-                  <span>&gt;100 kWh</span>
+                <div className="flex flex-col gap-1 w-full max-w-[220px] mt-2 sm:mt-0">
+                  <div className="flex justify-between items-end text-[9px] font-bold text-gray-400 capitalize px-1 leading-none">
+                    <span className="text-left w-[35%]">0</span>
+                    <span className="text-center w-auto whitespace-nowrap">3 Wh</span>
+                    <span className="text-right w-[60%] pr-4">1 kWh</span>
+                  </div>
+                  <div className="flex w-full h-2 rounded-full overflow-hidden relative">
+                    <div className="w-[35%] h-full" style={{ background: "linear-gradient(to right, rgb(15,50,35), rgb(245,230,80))" }} />
+                    <div className="w-[2px] bg-white h-full z-10" />
+                    <div className="w-[65%] h-full" style={{ background: "linear-gradient(to right, rgb(245,230,80) 0%, rgb(235,190,30) 40%, rgb(225,110,30) 100%)" }} />
+                    <div className="absolute -right-3 top-0 w-2 h-2 rounded-full border border-white z-20" style={{ background: 'rgb(225,50,35)' }} title=">100 kWh" />
+                  </div>
                 </div>
               </div>
             </motion.div>
