@@ -462,49 +462,68 @@ function fmtOffset(v: number, u: string) {
   if (v < 100) return `${(Math.round(v * 10) / 10).toLocaleString()} ${u}`;
   return `${Math.round(v).toLocaleString()} ${u}`;
 }
-function equivEnergy(wh: number): string {
-  const n = wh / 0.8;
-  if (n < 1/60) return `${Math.round(n * 3600)} seconds of Netflix`;
-  if (n < 1) return `${Math.round(n * 60)} seconds of Netflix`;
-  if (n < 60) return `${Math.round(n)} minutes of Netflix`;
-  if (n < 1440) return `${(n/60).toFixed(1)} hours of Netflix`;
-  return `${(n/60/24).toFixed(1)} days of Netflix`;
+// ─── COMPARABLE UNITS ─────────────────────────────────────────────────────────
+const ENERGY_COMPARABLES = [
+  { id: "netflix",    label: "Netflix streaming",   unitWh: 0.8,    unit: (n: number) => n < 1/60 ? `${Math.round(n*3600)} seconds` : n < 1 ? `${Math.round(n*60)} seconds` : n < 60 ? `${Math.round(n)} minutes` : n < 1440 ? `${(n/60).toFixed(1)} hours` : `${(n/60/24).toFixed(1)} days`, suffix: "of Netflix" },
+  { id: "led",        label: "LED bulb (10W)",       unitWh: 10,     unit: (n: number) => n < 1 ? `${Math.round(n*60)} minutes` : n < 24 ? `${n.toFixed(1)} hours` : `${(n/24).toFixed(1)} days`, suffix: "of a 10W LED bulb" },
+  { id: "microwave",  label: "Microwave (1000W)",    unitWh: 1000,   unit: (n: number) => n < 1/60 ? `${(n*3600).toFixed(1)} seconds` : n < 1 ? `${(n*60).toFixed(1)} minutes` : `${n.toFixed(1)} hours`, suffix: "of microwaving" },
+  { id: "ebike",      label: "E-bike miles",          unitWh: 15,     unit: (n: number) => n < 1 ? `${(n * 5280).toFixed(0)} feet` : `${n.toFixed(1)} miles`, suffix: "on an e-bike" },
+  { id: "ev",         label: "Electric car miles",    unitWh: 300,    unit: (n: number) => n < 0.1 ? `${Math.round(n*5280)} feet` : `${n.toFixed(1)} miles`, suffix: "in an EV" },
+  { id: "phone",      label: "Phone charges",         unitWh: 12,     unit: (n: number) => n < 1 ? `${(n*100).toFixed(0)}%` : `${n.toFixed(1)}`, suffix: n => n < 1 ? " of a phone charge" : " phone charges" },
+  { id: "laptop",     label: "Laptop charges",        unitWh: 60,     unit: (n: number) => n < 1 ? `${(n*100).toFixed(0)}%` : `${n.toFixed(1)}`, suffix: n => n < 1 ? " of a laptop charge" : " laptop charges" },
+] as const;
+
+const WATER_COMPARABLES = [
+  { id: "handwash",   label: "Handwashes (110 mL)",   unitMl: 110,    unit: (n: number) => n >= 10000 ? `${(n/1000).toFixed(1)}K` : n >= 1 ? `${Math.round(n).toLocaleString()}` : n >= 0.1 ? `${n.toFixed(1)} of a` : n > 0 ? `${n.toFixed(2)} of a` : "0", suffix: n => n >= 1 ? (Math.round(n)===1 ? " handwash" : " handwashes") : " handwash" },
+  { id: "sip",        label: "Sips of water (30 mL)",  unitMl: 30,     unit: (n: number) => n >= 1 ? `${Math.round(n).toLocaleString()}` : `${n.toFixed(1)}`, suffix: n => Math.round(n)===1 ? " sip of water" : " sips of water" },
+  { id: "glass",      label: "Glasses (250 mL)",       unitMl: 250,    unit: (n: number) => n >= 1 ? `${Math.round(n).toLocaleString()}` : `${n.toFixed(2)} of a`, suffix: n => n >= 1 ? (Math.round(n)===1 ? " glass of water" : " glasses of water") : " glass of water" },
+  { id: "bottle",     label: "Water bottles (500 mL)",  unitMl: 500,    unit: (n: number) => n >= 1 ? `${n.toFixed(1)}` : `${(n*100).toFixed(0)}% of a`, suffix: n => n >= 1 ? " water bottles" : " water bottle" },
+  { id: "shower",     label: "Showers (65 L)",          unitMl: 65000,  unit: (n: number) => n >= 1 ? `${n.toFixed(1)}` : n >= 0.01 ? `${(n*100).toFixed(1)}% of a` : `${(n*100).toFixed(2)}% of a`, suffix: n => n >= 1 ? " showers" : " shower" },
+  { id: "bath",       label: "Baths (150 L)",           unitMl: 150000, unit: (n: number) => n >= 1 ? `${n.toFixed(1)}` : n >= 0.01 ? `${(n*100).toFixed(1)}% of a` : `${(n*100).toFixed(2)}% of a`, suffix: n => n >= 1 ? " baths" : " bath" },
+  { id: "pool",       label: "Swimming pools (75K L)",  unitMl: 75000000, unit: (n: number) => `${n.toFixed(n < 0.001 ? 6 : 4)}`, suffix: " swimming pools" },
+] as const;
+
+function equivEnergy(wh: number, compId: string): string {
+  const comp = ENERGY_COMPARABLES.find(c => c.id === compId) ?? ENERGY_COMPARABLES[0];
+  const n = wh / comp.unitWh;
+  const valStr = comp.unit(n);
+  const suf = typeof comp.suffix === 'function' ? comp.suffix(n) : ` ${comp.suffix}`;
+  return `${valStr}${suf}`;
 }
-function equivWater(ml: number): string {
-  const h = ml / 110;
-  if (h >= 10000) return `${(h / 1000).toFixed(1)}K handwashes`;
-  if (h >= 1) return `${Math.round(h).toLocaleString()} handwash${Math.round(h) === 1 ? "" : "es"}`;
-  if (h >= 0.1) return `${h.toFixed(1)} of a handwash`;
-  if (h > 0) return `${h.toFixed(2)} of a handwash`;
-  return `0 handwashes`;
+function equivWater(ml: number, compId: string): string {
+  const comp = WATER_COMPARABLES.find(c => c.id === compId) ?? WATER_COMPARABLES[0];
+  const n = ml / comp.unitMl;
+  const valStr = comp.unit(n);
+  const suf = typeof comp.suffix === 'function' ? comp.suffix(n) : comp.suffix;
+  return `${valStr}${suf}`;
 }
 
 function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
-  // Dark Green (0 Wh) → Light Grey (1 Wh) → Golden Yellow (500 Wh) → Burnt Orange (1000 Wh) → Deep Red (>1000 Wh)
+  // Dark Green (0 Wh) → Light Blue (1 Wh) → Golden Yellow (500 Wh) → Burnt Orange (1000 Wh) → Deep Red (>1000 Wh)
   if (wh >= 1000) return { r: 180, g: 40, b: 0 };
   if (wh <= 0)    return { r: 22,  g: 120, b: 52 };  // Dark green
 
   const dkGreen = { r: 22,  g: 120, b: 52  }; // Dark green
-  const ltGrey  = { r: 210, g: 210, b: 210 }; // Light grey
+  const ltBlue  = { r: 147, g: 197, b: 253 }; // Light blue
   const golden  = { r: 253, g: 186, b: 0   }; // Golden yellow
   const burnt   = { r: 214, g: 90,  b: 0   }; // Burnt orange
 
-  // 0 → 1 Wh: dark green → light grey
+  // 0 → 1 Wh: dark green → light blue
   if (wh <= 1) {
     const t = wh;
     return {
-      r: Math.round(dkGreen.r + (ltGrey.r - dkGreen.r) * t),
-      g: Math.round(dkGreen.g + (ltGrey.g - dkGreen.g) * t),
-      b: Math.round(dkGreen.b + (ltGrey.b - dkGreen.b) * t),
+      r: Math.round(dkGreen.r + (ltBlue.r - dkGreen.r) * t),
+      g: Math.round(dkGreen.g + (ltBlue.g - dkGreen.g) * t),
+      b: Math.round(dkGreen.b + (ltBlue.b - dkGreen.b) * t),
     };
   }
-  // 1 → 500 Wh: light grey → golden yellow
+  // 1 → 500 Wh: light blue → golden yellow
   if (wh <= 500) {
     const t = (wh - 1) / 499;
     return {
-      r: Math.round(ltGrey.r + (golden.r - ltGrey.r) * t),
-      g: Math.round(ltGrey.g + (golden.g - ltGrey.g) * t),
-      b: Math.round(ltGrey.b + (golden.b - ltGrey.b) * t),
+      r: Math.round(ltBlue.r + (golden.r - ltBlue.r) * t),
+      g: Math.round(ltBlue.g + (golden.g - ltBlue.g) * t),
+      b: Math.round(ltBlue.b + (golden.b - ltBlue.b) * t),
     };
   }
   // 500 → 1000 Wh: golden yellow → burnt orange
@@ -519,7 +538,7 @@ function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
 // ─── INLINE PILL DROPDOWN ────────────────────────────────────────────────────
 function InlineDropdown({ value, onChange }: { value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false);
-  const scenariosByCategory = SCENARIOS.reduce((acc, s) => {
+  const scenariosByCategory = SCENARIOS.filter(s => s.category !== "Typical Usage").reduce((acc, s) => {
     if (!acc[s.category]) acc[s.category] = [];
     acc[s.category].push(s);
     return acc;
@@ -589,14 +608,35 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                 ))}
               </div>
               <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-gray-100">
-                <button onClick={() => { onChange("custom"); setOpen(false); }}
-                  className={`px-5 py-2 rounded-full transition-all border text-[12px] ${"custom" === value ? "bg-white border-black border-2 font-bold text-black shadow-sm" : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-medium text-gray-700 shadow-sm"}`}>
-                  Custom combination
-                </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => { onChange("custom"); setOpen(false); }}
+                    className={`px-5 py-2 rounded-full transition-all border text-[12px] ${"custom" === value ? "bg-white border-black border-2 font-bold text-black shadow-sm" : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-medium text-gray-700 shadow-sm"}`}>
+                    Custom
+                  </button>
+                  {/* Typical usage circle buttons */}
+                  {[{id: "typical-daily", icon: "D", tip: "Typical day"}, {id: "typical-weekly", icon: "W", tip: "Typical week"}, {id: "typical-monthly", icon: "M", tip: "Typical month"}].map(p => {
+                    const sc = SCENARIOS.find(s => s.id === p.id);
+                    const e = sc ? getEnergyWh(sc.id, sc.baseEnergyWh, "commercial") : 0;
+                    const rgb = getEnergyColorRgb(e);
+                    const isSelected = value === p.id;
+                    return (
+                      <button key={p.id} title={p.tip}
+                        onClick={() => { onChange(p.id); setOpen(false); }}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold transition-all border-2 shrink-0 ${isSelected ? 'shadow-md scale-110' : 'hover:scale-105'}`}
+                        style={{
+                          backgroundColor: isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.12)`,
+                          borderColor: isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.8)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`,
+                          color: `rgb(${Math.max(0,rgb.r-30)},${Math.max(0,rgb.g-30)},${Math.max(0,rgb.b-30)})`,
+                        }}>
+                        {p.icon}
+                      </button>
+                    );
+                  })}
+                </div>
                 <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
                   <span>Energy:</span>
                   <span>0 Wh</span>
-                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(22,120,52) 0%, rgb(210,210,210) 3%, rgb(253,186,0) 50%, rgb(214,90,0) 100%)" }}></div>
+                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(22,120,52) 0%, rgb(147,197,253) 3%, rgb(253,186,0) 50%, rgb(214,90,0) 100%)" }}></div>
                   <span>1 kWh</span>
                   <div className="w-2 h-2 rounded-full ml-1" style={{ background: 'rgb(180,40,0)' }}></div>
                   <span>&gt;100 kWh</span>
@@ -1161,6 +1201,8 @@ export default function Home() {
   const [showCompare, setShowCompare] = useState(false);
   const [showGetInvolved, setShowGetInvolved] = useState(false);
   const [multiplier, setMultiplier] = useState(1);
+  const [energyComp, setEnergyComp] = useState("netflix");
+  const [waterComp, setWaterComp] = useState("handwash");
   const [customCounts, setCustomCounts] = useState<Record<string, number>>(
     Object.fromEntries(CUSTOM_TASKS.map(t => [t.id, t.defaultVal]))
   );
@@ -1269,7 +1311,10 @@ export default function Home() {
                           <span style={pillStyle} className="inline-flex items-stretch flex-wrap justify-center bg-white border-2 rounded-[100px] hover:shadow-lg transition-all relative">
                             <InlineDropdown value={selectedId} onChange={setSelectedId} />
                             <div className="w-px bg-gray-200 my-2" />
-                            <InlineMultiplier value={multiplier} onChange={setMultiplier} />
+                            <div className="relative flex items-stretch">
+                              <InlineMultiplier value={multiplier} onChange={setMultiplier} />
+                              <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[9px] text-gray-400 font-medium whitespace-nowrap pointer-events-none">multiplier</span>
+                            </div>
                           </span>
                         );
                       })()}
@@ -1284,11 +1329,28 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* Secondary: equivalency */}
-                  <p className="text-sm md:text-[1.1rem] leading-[1.7] text-gray-500 text-center mt-1 mb-2"
+                  {/* Secondary: equivalency with selectable comparables */}
+                  <div className="text-sm md:text-[1.1rem] leading-[1.7] text-gray-500 text-center mt-1 mb-2 flex flex-wrap items-center justify-center gap-x-1.5"
                     style={{ fontFamily: "'Anthropic Serif', serif" }}>
-                    That's {equivEnergy(energyWh)} and {equivWater(waterMl)}.
-                  </p>
+                    <span>That's</span>
+                    <span className="inline-flex items-center gap-1">
+                      <span>{equivEnergy(energyWh, energyComp)}</span>
+                      <select value={energyComp} onChange={e => setEnergyComp(e.target.value)}
+                        className="text-[10px] text-gray-400 bg-transparent border-b border-gray-300 border-dashed cursor-pointer focus:outline-none hover:text-gray-600 hover:border-gray-400 transition-colors appearance-none pl-0.5 pr-3"
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%23999' fill='none' stroke-width='1.2'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 2px center' }}>
+                        {ENERGY_COMPARABLES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                      </select>
+                    </span>
+                    <span>and</span>
+                    <span className="inline-flex items-center gap-1">
+                      <span>{equivWater(waterMl, waterComp)}</span>
+                      <select value={waterComp} onChange={e => setWaterComp(e.target.value)}
+                        className="text-[10px] text-gray-400 bg-transparent border-b border-gray-300 border-dashed cursor-pointer focus:outline-none hover:text-gray-600 hover:border-gray-400 transition-colors appearance-none pl-0.5 pr-3"
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M1 1l3 3 3-3' stroke='%23999' fill='none' stroke-width='1.2'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 2px center' }}>
+                        {WATER_COMPARABLES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+                      </select>
+                    </span>
+                  </div>
 
                   {/* Tertiary: selectors */}
                   <EstimateSelectors tier={tier} wueTier={wueTier} onTierChange={setTier} onWueTierChange={setWueTier} isTierFixed={!scenario.tierSensitive} />
