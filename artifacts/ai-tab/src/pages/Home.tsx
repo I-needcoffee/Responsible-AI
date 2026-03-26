@@ -493,13 +493,13 @@ function getCompLabel(comparables: typeof ENERGY_COMPARABLES | typeof WATER_COMP
 
 function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
   // Very Deep Green (0 Wh) → Light Green (1 Wh) → Golden Yellow (500 Wh) → Burnt Orange (1000 Wh) → Deep Red (>1000 Wh)
-  if (wh >= 1000) return { r: 224, g: 53, b: 37 }; // Deep red-orange
-  if (wh <= 0)    return { r: 31,  g: 79, b: 70 }; // Slate green
+  if (wh >= 1000) return { r: 225, g: 50, b: 35 }; // Deep red-orange
+  if (wh <= 0)    return { r: 15,  g: 45, b: 40 }; // Very dark slate green
 
-  const dkGreen = { r: 31,  g: 79,  b: 70  }; // Slate green
-  const ltGreen = { r: 78,  g: 124, b: 62  }; // Olive/moss green
-  const golden  = { r: 216, g: 173, b: 31  }; // Muted golden yellow
-  const burnt   = { r: 224, g: 122, b: 33  }; // Warm orange
+  const dkGreen = { r: 15,  g: 45,  b: 40  }; // Very dark slate green
+  const ltGreen = { r: 140, g: 190, b: 70  }; // Bright olive/lime
+  const golden  = { r: 235, g: 190, b: 30  }; // Golden yellow
+  const burnt   = { r: 225, g: 110, b: 30  }; // Warm orange
 
   // 0 → 1 Wh: very deep green → light green
   if (wh <= 1) {
@@ -677,9 +677,9 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                 <div className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500">
                   <span>Energy:</span>
                   <span>0 Wh</span>
-                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(31,79,70) 0%, rgb(78,124,62) 3%, rgb(216,173,31) 50%, rgb(224,122,33) 100%)" }}></div>
+                  <div className="w-28 h-2 rounded-full" style={{ background: "linear-gradient(to right, rgb(15,45,40) 0%, rgb(140,190,70) 3%, rgb(235,190,30) 50%, rgb(225,110,30) 100%)" }}></div>
                   <span>1 kWh</span>
-                  <div className="w-2 h-2 rounded-full ml-1" style={{ background: 'rgb(224,53,37)' }}></div>
+                  <div className="w-2 h-2 rounded-full ml-1" style={{ background: 'rgb(225,50,35)' }}></div>
                   <span>&gt;100 kWh</span>
                 </div>
               </div>
