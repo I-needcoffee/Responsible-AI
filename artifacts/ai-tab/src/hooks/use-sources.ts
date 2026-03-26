@@ -43,6 +43,17 @@ export function useSources() {
       keyFindings: "Estimates a standard ChatGPT query requires 2.9 Wh of electricity, compared to 0.3 Wh for a standard Google search.",
       limitations: "Industry average model; does not account for latest optimizations (e.g. GPT-4o architecture changes).",
       category: "industry"
+    },
+    {
+      id: "mit-tech-review-2025",
+      title: "We did the math on AI's energy footprint. Here's the story you haven't heard.",
+      authors: ["James O'Donnell", "Casey Crownhart"],
+      institution: "MIT Technology Review",
+      year: 2025,
+      url: "https://www.technologyreview.com/2025/05/20/1116327/ai-energy-usage-climate-footprint-big-tech/",
+      keyFindings: "Comprehensive analysis using UMich ML.Energy leaderboard measurements. Llama 3.1 8B: ~0.032 Wh per response; Llama 3.1 405B: ~1.86 Wh. Video generation (CogVideoX, 5s clip): ~944 Wh. Reasoning models use ~43× more energy. Data center carbon intensity is 48% higher than US average. By 2028, AI alone could consume electricity equivalent to 22% of US households.",
+      limitations: "Measurements are on open-source models only; closed-source models (GPT-4, Claude, Gemini) remain unverifiable. Full data center overhead estimated via 2× GPU multiplier.",
+      category: "journalism"
     }
   ];
 

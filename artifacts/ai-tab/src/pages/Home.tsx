@@ -84,6 +84,12 @@ const TIER_ENERGY: Record<string, Record<ModelTier, number>> = {
   "coding":        { research: 0.1,   commercial: 12.0,  frontier: 29    },
   // Source: ~1000 interactions x base (research: 50Wh), Google Cloud 2025 (commercial: 240Wh), EPRI 2024 (frontier: 1000Wh)
   "app-build":     { research: 50,    commercial: 240,   frontier: 1000  },
+  // Composite: 15 chat + 2 email + 1 search + 1 image
+  "typical-daily": { research: 0.045 + 0.010 + 0.01 + 2.4, commercial: 3.60 + 1.00 + 0.72 + 2.4, frontier: 43.5 + 6.0 + 8.7 + 2.4 },
+  // Composite: 100 chat + 10 email + 5 search + 3 image + 1 long chat + 1 meeting
+  "typical-weekly": { research: 0.3 + 0.05 + 0.05 + 7.2 + 0.15 + 0.06, commercial: 24.0 + 5.0 + 3.6 + 7.2 + 12.0 + 1.7, frontier: 290 + 30 + 43.5 + 7.2 + 145 + 5.9 },
+  // Composite: 400 chat + 40 email + 20 search + 10 image + 4 long chat + 4 meeting + 200 code + 1 video
+  "typical-monthly": { research: 1.2 + 0.2 + 0.2 + 24 + 0.6 + 0.24 + 20 + 944, commercial: 96 + 20 + 14.4 + 24 + 48 + 6.8 + 24 + 944, frontier: 1160 + 120 + 174 + 24 + 580 + 23.6 + 5800 + 944 },
 };
 
 const TIER_SOURCE: Record<string, Record<ModelTier, string>> = {
@@ -319,6 +325,39 @@ const SCENARIOS: Scenario[] = [
       note: "Training is not estimate-range or water-location sensitive here — Li et al. measured this specific historical event. Frontier model training costs are not publicly disclosed.",
     },
   },
+  // ─── TYPICAL USAGE PRESETS ──────────────────────────────────────────────────
+  // Composite scenarios representing realistic accumulated AI use.
+  // Energy = sum of component tasks at Standard tier (Google Cloud 2025 Aug, 0.24 Wh base)
+  {
+    id: "typical-daily", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical day", dropdownLabel: "a typical day of AI use",
+    clarifying: "A realistic day: ~15 short chat messages, 2 AI email replies, 1 AI search, and 1 AI image. Based on moderate AI usage patterns (MIT Technology Review 2025 analysis of daily habits).",
+    baseEnergyWh: 0.045, energyLow: 0.045, energyHigh: 52.2, baseWaterMl: 0.045 * 3.45,
+    confidence: "low", tierSensitive: true,
+    math: {
+      energy: { equation: "Energy = 15 × chat + 2 × email + 1 × AI search + 1 × image", sourceName: "Composite — Google Cloud 2025 · Luccioni 2023 · MIT Tech Review 2025", derivation: "Standard tier: (15 × 0.24) + (2 × 0.50) + (1 × 0.72) + (1 × 2.4) = 3.60 + 1.00 + 0.72 + 2.40 = 7.72 Wh. Light tier: ~0.045 Wh. Intensive tier: ~52.2 Wh." },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023", derivation: "Standard energy × Typical WUE: 7.72 Wh × 3.45 mL/Wh ≈ 26.6 mL per day." },
+    },
+  },
+  {
+    id: "typical-weekly", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical week", dropdownLabel: "a typical week of AI use",
+    clarifying: "A week of moderate use: ~100 chat messages, 10 email replies, 5 AI searches, 3 images, 1 long conversation, and 1 meeting-notes session. Represents a knowledge worker who uses AI tools regularly.",
+    baseEnergyWh: 0.39, energyLow: 0.39, energyHigh: 455, baseWaterMl: 0.39 * 3.45,
+    confidence: "low", tierSensitive: true,
+    math: {
+      energy: { equation: "Energy = 100 × chat + 10 × email + 5 × search + 3 × image + 1 × long chat + 1 × meeting notes", sourceName: "Composite — Google Cloud 2025 · Luccioni 2023 · MIT Tech Review 2025", derivation: "Standard: (100 × 0.24) + (10 × 0.50) + (5 × 0.72) + (3 × 2.4) + (1 × 12.0) + (1 × 1.70) = 24 + 5 + 3.6 + 7.2 + 12 + 1.7 = 53.5 Wh." },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023", derivation: "Standard energy × Typical WUE: 53.5 Wh × 3.45 mL/Wh ≈ 184 mL per week." },
+    },
+  },
+  {
+    id: "typical-monthly", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical month", dropdownLabel: "a typical month of AI use",
+    clarifying: "A month of active use: ~400 chat messages, 40 email replies, 20 AI searches, 10 images, 4 long conversations, 4 meeting-notes sessions, 200 code suggestions, and 1 short AI video. A power-user knowledge worker.",
+    baseEnergyWh: 2.44, energyLow: 2.44, energyHigh: 2886, baseWaterMl: 2.44 * 3.45,
+    confidence: "low", tierSensitive: true,
+    math: {
+      energy: { equation: "Energy = 400 × chat + 40 × email + 20 × search + 10 × image + 4 × long chat + 4 × meeting + 200 × code + 1 × video", sourceName: "Composite — Google Cloud 2025 · Luccioni 2023 · MIT Tech Review 2025", derivation: "Standard: (400 × 0.24) + (40 × 0.50) + (20 × 0.72) + (10 × 2.4) + (4 × 12) + (4 × 1.7) + (200 × 0.12) + (1 × 944) = 96 + 20 + 14.4 + 24 + 48 + 6.8 + 24 + 944 = 1,177 Wh." },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023", derivation: "Standard energy × Typical WUE: 1,177 Wh × 3.45 mL/Wh ≈ 4.1 L per month." },
+    },
+  },
 ];
 
 // ─── CUSTOM CALCULATOR ────────────────────────────────────────────────────────
@@ -337,6 +376,7 @@ const ACTION_TIPS = [
   { impact: "Very high", color: "#c0392b", title: "Skip AI video generation unless essential", body: "One 10-second AI video uses as much energy as ~3,900 chat messages (at Google's measured rate). Describe your idea in words first. If you must generate, generate once — don't regenerate." },
   { impact: "High",      color: "#e67e22", title: "Think before generating AI images",        body: "One AI image uses ~10× more energy than a chat message. Ask: can I describe this in words instead? Reserve image generation for when visuals are truly necessary." },
   { impact: "High",      color: "#e67e22", title: "Get your prompt right the first time",     body: "Every 'try again' or 'make it shorter' is a full new request at the same cost. Spend 30 seconds being specific before submitting. One good prompt beats five mediocre ones." },
+  { impact: "High",      color: "#e67e22", title: "Avoid 'deep research' and reasoning modes for simple tasks", body: "Reasoning models (like o3 or DeepSeek R1) can use up to 43× more energy than standard chat for the same question (Luccioni, cited in MIT Technology Review 2025). Use standard chat for straightforward questions — reserve reasoning and deep research modes for genuinely complex problems." },
   { impact: "Medium",    color: "#f0a500", title: "Use smaller models for simple tasks",      body: "Basic questions and formatting don't need the most powerful AI. A verified standard Gemini prompt uses 0.24 Wh, compared to 2.9+ Wh for older frontier models on intense workloads—over a 10× difference in power." },
   { impact: "Medium",    color: "#f0a500", title: "Batch your questions into one prompt",     body: "Three separate messages cost 3× more than one well-structured prompt. Combine related questions: 'What is X, why does Y happen, and how do I fix Z?' beats asking each separately." },
   { impact: "Medium",    color: "#f0a500", title: "Keep conversations focused",               body: "A 50-message conversation uses ~50× more energy than one focused message. Use AI for specific tasks, not extended back-and-forth. Shorter, more targeted sessions are more efficient." },
@@ -396,6 +436,9 @@ const TASK_COLORS: Record<string, string> = {
   "scoring-rubric": "#6B7280",
   "lesson-plan":  "#4B5563",
   "study-guide":  "#374151",
+  "typical-daily": "#6366F1",
+  "typical-weekly": "#8B5CF6",
+  "typical-monthly": "#A855F7",
 };
 
 // ─── FORMAT HELPERS ───────────────────────────────────────────────────────────
@@ -1031,9 +1074,12 @@ function SourcesModal({ onClose }: { onClose: () => void }) {
             <div className="flex flex-col gap-4 text-xs text-gray-700">
               {[
                 { title: "Only Google has published per-prompt measurements (2025)", body: "Google Cloud's May 2025 blog post is the only major AI company to publish direct per-prompt energy and water measurements. ChatGPT (OpenAI/Azure), Claude (Anthropic/AWS), and Midjourney have not published per-query figures. All estimates for non-Google commercial AI are modelled." },
-                { title: "Video generation is unverified", body: "No peer-reviewed study has directly measured energy for commercial video AI (Sora, Runway, Pika) as of 2025. The 944 Wh estimate is derived by scaling image measurements by frame count — physically reasonable but unconfirmed." },
+                { title: "Reasoning models use dramatically more energy", body: "Chain-of-thought reasoning models (like OpenAI o3 or DeepSeek R1) can use up to 43× more energy than standard chat for simple problems (Luccioni, cited in MIT Technology Review 2025). Our tool's estimates are for standard inference — reasoning-heavy workloads and 'deep research' features are not yet captured and would significantly increase real-world energy use." },
+                { title: "Video generation is unverified", body: "No peer-reviewed study has directly measured energy for commercial video AI (Sora, Runway, Pika) as of 2025. The 944 Wh estimate is derived by scaling image measurements by frame count — physically reasonable but unconfirmed. MIT Technology Review's independent CogVideoX measurement (~944 Wh for 5 seconds at 16fps) aligns with our estimate." },
                 { title: "Water varies dramatically by data center location", body: "WUE can range from ~1.1 mL/Wh (Google's efficient TPU data centers) to 6+ mL/Wh (hot-climate evaporative cooling). When you make an AI request, you typically don't know where it will be processed." },
                 { title: "Hardware lifecycle excluded", body: "All estimates cover operational energy only. GPU and server manufacturing, data center construction, and end-of-life disposal are excluded. Research suggests embodied carbon represents 50–80% of total lifecycle impact." },
+                { title: "Data centers use dirtier-than-average electricity", body: "A Harvard preprint study found that the carbon intensity of electricity used by data centers was 48% higher than the US average. Data centers cluster in coal-heavy regions (Virginia, West Virginia) and run 24/7, including when cleaner sources aren't available. The same AI query produces very different emissions depending on location and time of day (MIT Technology Review 2025)." },
+                { title: "AI infrastructure costs may be passed to consumers", body: "A 2024 Virginia legislature report estimated that data center energy costs could add ~$37.50/month to average residential electricity bills. Harvard researchers found that utility discounts given to Big Tech data centers can raise rates for other consumers. As AI infrastructure grows, these costs are increasingly socialized (MIT Technology Review 2025)." },
                 { title: "Google's 2025 efficiency may not apply to other providers", body: "Google uses custom TPUs (Trillium/Ironwood) that are 30× more energy-efficient than their first TPU. ChatGPT and Claude run primarily on Nvidia GPUs in third-party cloud infrastructure — likely closer to the 'Intensive' energy estimate for older workloads, though modern GPT-4o is now near the 'Standard' range." },
               ].map((g, i) => (
                 <div key={i} className="border-b border-gray-100 pb-4 last:border-0">
@@ -1214,8 +1260,9 @@ export default function Home() {
                       {(() => {
                         const rgb = getEnergyColorRgb(energyWh);
                         const pillStyle = {
-                          borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.5)`,
-                          boxShadow: `0 0 15px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`
+                          borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.7)`,
+                          boxShadow: `0 0 20px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35), 0 0 50px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15), 0 0 80px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`,
+                          transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
                         };
 
                         return (

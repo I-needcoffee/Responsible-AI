@@ -235,6 +235,21 @@ const SOURCES = [
     avgTrustRating: 2.2,
     totalRatings: 0,
   },
+  {
+    id: "mittechreview2025",
+    title: "We did the math on AI's energy footprint. Here's the story you haven't heard.",
+    authors: ["James O'Donnell", "Casey Crownhart"],
+    institution: "MIT Technology Review",
+    year: 2025,
+    url: "https://www.technologyreview.com/2025/05/20/1116327/ai-energy-usage-climate-footprint-big-tech/",
+    category: "journalism",
+    methodology: "Investigative analysis combining direct GPU measurements from UMich ML.Energy leaderboard (Llama 3.1 models), Hugging Face CodeCarbon measurements (CogVideoX video generation), Epoch AI estimates, and Lawrence Berkeley National Lab projections. Used a 2× GPU multiplier (from Microsoft 2024 paper) to estimate full data center overhead. Consulted two dozen experts.",
+    keyFindings: "Llama 3.1 8B: ~114J (~0.032 Wh) per text response. Llama 3.1 405B: ~6,706J (~1.86 Wh). Stable Diffusion 3 Medium image: ~2,282J (~0.63 Wh) standard, ~4,402J (~1.22 Wh) high-quality. CogVideoX 5-second video (16fps): ~3.4MJ (~944 Wh). Reasoning models use ~43× more energy than standard models for simple tasks. Data center carbon intensity 48% higher than US average (Harvard study). By 2028, AI could use 165–326 TWh/yr in US (22% of households). Consumer electricity bills may rise ~$37.50/mo in Virginia due to data center costs.",
+    limitations: "Open-source models only — GPT-4, Claude, Gemini remain unmeasurable. The 2× GPU multiplier for total DC overhead is an approximation from one Microsoft paper. CogVideoX is lower quality than commercial video generators (Sora, Veo2), so actual commercial video energy may be higher. Epoch AI ChatGPT estimate (~0.3 Wh) involves unverifiable assumptions.",
+    dataAvailability: "partial",
+    avgTrustRating: 4.5,
+    totalRatings: 0,
+  },
 ];
 
 router.get("/sources", (_req, res) => {
