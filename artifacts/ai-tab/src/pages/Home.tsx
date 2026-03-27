@@ -864,11 +864,15 @@ function MathModal({ scenario, tier, wueTier, energyWh, waterMl, onClose }: {
 }
 
 // ─── CUSTOM CALCULATOR ────────────────────────────────────────────────────────
-function CustomCalculator({ counts, onChange, totalE, totalW }: {
+function CustomCalculator({ counts, onChange, totalE, totalW, energyComp, setEnergyComp, waterComp, setWaterComp }: {
   counts: Record<string, number>;
   onChange: (id: string, val: number) => void;
   totalE: number;
   totalW: number;
+  energyComp: string;
+  setEnergyComp: (id: string) => void;
+  waterComp: string;
+  setWaterComp: (id: string) => void;
 }) {
   return (
     <div className="flex flex-col gap-3 w-full max-w-lg mx-auto mt-2">
@@ -887,15 +891,23 @@ function CustomCalculator({ counts, onChange, totalE, totalW }: {
           ? <p className="text-gray-400 dark:text-gray-500 text-sm italic">Adjust sliders to see your usage.</p>
           : <>
             <p className="text-[1.15rem] leading-[2] text-black dark:text-gray-100">
-              Your session used{" "}
+              Your combination uses{" "}
               <strong style={{ borderBottom: "2px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtEnergy(totalE)}</strong>{" "}
               of energy and{" "}
               <strong style={{ borderBottom: "2px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtWater(totalW)}</strong>{" "}
               of water.
             </p>
-            <p className="text-[1.05rem] text-gray-500 dark:text-gray-400 mt-2" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
-              That's <span className="font-medium text-gray-500 dark:text-gray-400">{equivEnergyVal(totalE, "netflix")}</span> of Netflix and <span className="font-medium text-gray-500 dark:text-gray-400">{equivWaterVal(totalW, "handwash")}</span> handwashes.
-            </p>
+            <div className="text-[0.9rem] min-[400px]:text-[1.05rem] sm:text-[1.15rem] md:text-[1.25rem] leading-[1.6] text-gray-500 dark:text-gray-400 text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-2 sm:px-4" style={{ fontFamily: "'Anthropic Serif', serif" }}>
+              <span>That's</span>
+              <span className="font-medium text-gray-500 dark:text-gray-400">{equivEnergyVal(totalE, energyComp)}</span>
+              <ComparableDropdown value={energyComp} onChange={setEnergyComp} options={ENERGY_COMPARABLES} />
+              <span>and</span>
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
+                <span className="font-medium text-gray-500 dark:text-gray-400">{equivWaterVal(totalW, waterComp)}</span>
+                <ComparableDropdown value={waterComp} onChange={setWaterComp} options={WATER_COMPARABLES} />
+                <span className="-ml-1">.</span>
+              </span>
+            </div>
           </>
         }
       </div>
@@ -1350,45 +1362,45 @@ export default function Home() {
       <div className="fixed bottom-6 right-6 z-40 hidden md:flex flex-col items-end gap-3">
         {/* Action FAB (Top) — Leaf icon */}
         <button onClick={() => setShowAction(true)}
-          className="bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
+          className="group bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
           style={{ width: 52, transition: 'width 0.35s cubic-bezier(0.25,1,0.5,1), box-shadow 0.3s' }}
           onMouseEnter={e => { e.currentTarget.style.width = '200px'; }}
           onMouseLeave={e => { e.currentTarget.style.width = '52px'; }}
           title="How to fix this">
-          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-green-600 dark:text-green-500">
+          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
             <Leaf size={20} />
           </div>
-          <span className="whitespace-nowrap font-medium text-sm text-gray-800 dark:text-gray-100 pr-5">
+          <span className="whitespace-nowrap font-medium text-sm text-gray-400 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 pr-5 transition-colors">
             Offset My Impact
           </span>
         </button>
 
         {/* Sources FAB (Middle) — BookOpen icon */}
         <button onClick={() => setShowSources(true)}
-          className="bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
+          className="group bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
           style={{ width: 52, transition: 'width 0.35s cubic-bezier(0.25,1,0.5,1), box-shadow 0.3s' }}
           onMouseEnter={e => { e.currentTarget.style.width = '200px'; }}
           onMouseLeave={e => { e.currentTarget.style.width = '52px'; }}
           title="Methodology">
-          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-blue-500 dark:text-blue-400">
+          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
             <BookOpen size={20} />
           </div>
-          <span className="whitespace-nowrap font-medium text-sm text-gray-800 dark:text-gray-100 pr-5">
+          <span className="whitespace-nowrap font-medium text-sm text-gray-400 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 pr-5 transition-colors">
             Sources & Data
           </span>
         </button>
 
         {/* Coffee FAB (Bottom) — Coffee icon */}
         <button onClick={() => setShowGetInvolved(true)}
-          className="bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
+          className="group bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
           style={{ width: 52, transition: 'width 0.35s cubic-bezier(0.25,1,0.5,1), box-shadow 0.3s' }}
           onMouseEnter={e => { e.currentTarget.style.width = '200px'; }}
           onMouseLeave={e => { e.currentTarget.style.width = '52px'; }}
           title="Get Involved">
-          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-yellow-500 dark:text-yellow-400">
+          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
             <Coffee size={20} />
           </div>
-          <span className="whitespace-nowrap font-medium text-sm text-gray-800 dark:text-gray-100 pr-5">
+          <span className="whitespace-nowrap font-medium text-sm text-gray-400 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 pr-5 transition-colors">
             Feedback & Coffee
           </span>
         </button>
@@ -1447,6 +1459,10 @@ export default function Home() {
                     onChange={(id, val) => setCustomCounts(prev => ({ ...prev, [id]: val }))}
                     totalE={customTotalE}
                     totalW={customTotalW}
+                    energyComp={energyComp}
+                    setEnergyComp={setEnergyComp}
+                    waterComp={waterComp}
+                    setWaterComp={setWaterComp}
                   />
                 </div>
               ) : scenario ? (
@@ -1517,19 +1533,19 @@ export default function Home() {
       {/* Original Coffee FAB has been moved to the bottom right FAB group. */}
 
       <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-4 py-2.5 rounded-full shadow-xl border border-gray-100 dark:border-gray-800 w-[95%] max-w-[340px] justify-between">
-        <button onClick={() => setShowSources(true)} className="flex flex-col items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 active:text-black dark:active:text-white flex-1 transition-colors">
+        <button onClick={() => setShowSources(true)} className="flex flex-col items-center gap-1.5 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 active:text-black dark:active:text-white flex-1 transition-colors">
           <BookOpen size={18} />
-          <span className="text-[10px] font-semibold tracking-wide">Sources</span>
+          <span className="text-[10px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">Sources</span>
         </button>
         <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 shrink-0" />
-        <button onClick={() => setShowAction(true)} className="flex flex-col items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 active:text-green-700 dark:active:text-green-300 flex-1 transition-colors">
+        <button onClick={() => setShowAction(true)} className="flex flex-col items-center gap-1.5 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 active:text-black dark:active:text-white flex-1 transition-colors">
           <Leaf size={18} />
-          <span className="text-[10px] font-semibold tracking-wide">Action</span>
+          <span className="text-[10px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">Action</span>
         </button>
         <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 shrink-0" />
-        <button onClick={() => setShowGetInvolved(true)} className="flex flex-col items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 active:text-yellow-700 dark:active:text-yellow-300 flex-1 transition-colors">
+        <button onClick={() => setShowGetInvolved(true)} className="flex flex-col items-center gap-1.5 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 active:text-black dark:active:text-white flex-1 transition-colors">
           <Coffee size={18} />
-          <span className="text-[10px] font-semibold tracking-wide">Coffee</span>
+          <span className="text-[10px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">Coffee</span>
         </button>
       </div>
 
