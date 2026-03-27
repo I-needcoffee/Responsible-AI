@@ -877,7 +877,9 @@ function CustomCalculator({ counts, onChange, totalE, totalW }: {
           <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300 w-44 shrink-0 leading-tight">{t.label}</label>
           <input type="range" min={0} max={t.max} step={t.step} value={counts[t.id] ?? 0}
             onChange={e => onChange(t.id, Number(e.target.value))} className="flex-1 accent-gray-900 dark:accent-gray-100 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer" />
-          <span className="text-[13px] font-bold w-12 text-right tabular-nums text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 px-2 py-1 rounded-md shadow-sm border border-gray-200 dark:border-gray-700">{counts[t.id] ?? 0}</span>
+          <input type="number" min={0} max={t.max} value={counts[t.id] ?? 0}
+            onChange={e => onChange(t.id, Number(e.target.value))}
+            className="text-[13px] font-bold w-16 text-right tabular-nums text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 px-2 py-1 rounded-md shadow-sm border border-gray-200 dark:border-gray-700 outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors" />
         </div>
       ))}
       <div className="border-t border-gray-100 dark:border-gray-800 pt-5 mt-2 text-center" style={{ fontFamily: "'Anthropic Serif', serif" }}>
@@ -1401,11 +1403,45 @@ export default function Home() {
               transition={{ duration: 0.2, ease: "easeOut" }}
               className="flex flex-col items-center gap-3 md:gap-5 w-full max-w-4xl">
               
+              <div className="flex flex-col items-center gap-3 text-[1.15rem] sm:text-[1.35rem] md:text-[1.65rem] leading-[1.5] text-black dark:text-gray-100 text-center"
+                style={{ fontFamily: "'Anthropic Serif', serif" }}>
+                
+                <div className="flex flex-col items-center gap-2">
+                  {(() => {
+                    const rgb = getEnergyColorRgb(energyWh);
+                    const pillStyle = {
+                      borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`,
+                      boxShadow: `0 0 20px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35), 0 0 50px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15), 0 0 80px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`,
+                      transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
+                    };
+
+                    return (
+                      <span style={pillStyle} className="inline-flex items-stretch flex-wrap justify-center z-50 bg-white dark:bg-[#121212] border-[3px] rounded-[100px] hover:shadow-lg transition-all relative">
+                        <InlineDropdown value={selectedId} onChange={setSelectedId} />
+                        {!isCustom && (
+                          <>
+                            <div className="w-px bg-gray-200 dark:bg-gray-700 my-2" />
+                            <InlineMultiplier value={multiplier} onChange={setMultiplier} />
+                          </>
+                        )}
+                      </span>
+                    );
+                  })()}
+                </div>
+
+                {!isCustom && (
+                  <div className="mt-2 md:mt-3 flex flex-wrap items-baseline justify-center gap-x-2 gap-y-2 px-4">
+                    <span>will use</span>
+                    <strong className="inline-block min-w-[5.5rem] text-center whitespace-nowrap" style={{ borderBottom: "3px solid currentColor", paddingBottom: "1px" }}>{fmtEnergy(energyWh)}</strong>
+                    <span>of energy and</span>
+                    <strong className="inline-block min-w-[5.5rem] text-center whitespace-nowrap" style={{ borderBottom: "3px solid currentColor", paddingBottom: "1px" }}>{fmtWater(waterMl)}</strong>
+                    <span>of water.</span>
+                  </div>
+                )}
+              </div>
+
               {isCustom ? (
-                <div className="w-full">
-                  <p className="text-center text-xs text-gray-400 mb-4">
-                    Scenario: <InlineDropdown value={selectedId} onChange={setSelectedId} />
-                  </p>
+                <div className="w-full mt-4">
                   <CustomCalculator
                     counts={customCounts}
                     onChange={(id, val) => setCustomCounts(prev => ({ ...prev, [id]: val }))}
@@ -1415,37 +1451,6 @@ export default function Home() {
                 </div>
               ) : scenario ? (
                 <>
-                  {/* Primary block: dropdown + data sentence — same font, dominant element */}
-                  <div className="flex flex-col items-center gap-3 text-[1.15rem] sm:text-[1.35rem] md:text-[1.65rem] leading-[1.5] text-black dark:text-gray-100 text-center"
-                    style={{ fontFamily: "'Anthropic Serif', serif" }}>
-                    
-                    <div className="flex flex-col items-center gap-2">
-                      {(() => {
-                        const rgb = getEnergyColorRgb(energyWh);
-                        const pillStyle = {
-                          borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`,
-                          boxShadow: `0 0 20px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35), 0 0 50px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15), 0 0 80px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`,
-                          transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
-                        };
-
-                        return (
-                          <span style={pillStyle} className="inline-flex items-stretch flex-wrap justify-center bg-white dark:bg-[#121212] border-[3px] rounded-[100px] hover:shadow-lg transition-all relative">
-                            <InlineDropdown value={selectedId} onChange={setSelectedId} />
-                            <div className="w-px bg-gray-200 dark:bg-gray-700 my-2" />
-                            <InlineMultiplier value={multiplier} onChange={setMultiplier} />
-                          </span>
-                        );
-                      })()}
-                    </div>
-
-                    <div className="mt-2 md:mt-3 flex flex-wrap items-baseline justify-center gap-x-2 gap-y-2 px-4">
-                      <span>will use</span>
-                      <strong className="inline-block min-w-[5.5rem] text-center whitespace-nowrap" style={{ borderBottom: "3px solid currentColor", paddingBottom: "1px" }}>{fmtEnergy(energyWh)}</strong>
-                      <span>of energy and</span>
-                      <strong className="inline-block min-w-[5.5rem] text-center whitespace-nowrap" style={{ borderBottom: "3px solid currentColor", paddingBottom: "1px" }}>{fmtWater(waterMl)}</strong>
-                      <span>of water.</span>
-                    </div>
-                  </div>
 
                   {/* Secondary: equivalency — comparable words ARE the dropdowns */}
                   <div className="text-[0.9rem] min-[400px]:text-[1.05rem] sm:text-[1.15rem] md:text-[1.25rem] leading-[1.6] text-gray-500 dark:text-gray-400 text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-2 sm:px-4"
