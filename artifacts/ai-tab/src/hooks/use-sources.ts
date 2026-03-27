@@ -54,6 +54,28 @@ export function useSources() {
       keyFindings: "Comprehensive analysis using UMich ML.Energy leaderboard measurements. Llama 3.1 8B: ~0.032 Wh per response; Llama 3.1 405B: ~1.86 Wh. Video generation (CogVideoX, 5s clip): ~944 Wh. Reasoning models use ~43× more energy. Data center carbon intensity is 48% higher than US average. By 2028, AI alone could consume electricity equivalent to 22% of US households.",
       limitations: "Measurements are on open-source models only; closed-source models (GPT-4, Claude, Gemini) remain unverifiable. Full data center overhead estimated via 2× GPU multiplier.",
       category: "journalism"
+    },
+    {
+      id: "reasoning-multiplier-2025",
+      title: "Reasoning models compute at 30x to 50x the energy of a standard prompt",
+      authors: ["Dauner et al.", "URI AI Lab"],
+      institution: "Various",
+      year: 2025,
+      url: "#",
+      keyFindings: "Models like OpenAI o1, o3, and DeepSeek R1 generate thousands of invisible 'thinking tokens' via chain-of-thought loops before outputting an answer. This pushes energy consumption to an average of 10 Wh to 40 Wh per query, roughly 30x to 50x the energy of a standard text prompt.",
+      limitations: "Focuses exclusively on text-based chain-of-thought generation.",
+      category: "academic"
+    },
+    {
+      id: "embodied-carbon-2022",
+      title: "Measuring the Carbon Intensity of AI in Cloud Instances",
+      authors: ["Jesse Dodge et al."],
+      institution: "Allen Institute for AI (AI2)",
+      year: 2022,
+      url: "https://arxiv.org/abs/2206.05229",
+      keyFindings: "Operational energy footprint (kWh) does not account for 'embodied carbon'—the significant environmental cost of manufacturing and disposing of the GPUs themselves. Embodied carbon can represent a substantial portion of the total lifecycle emissions for hardware.",
+      limitations: "Evaluates standard cloud GPU lifecycles, which may not perfectly align with specialized TPU pipelines.",
+      category: "academic"
     }
   ];
 

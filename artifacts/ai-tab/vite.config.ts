@@ -39,3 +39,4 @@ export default defineConfig({
     allowedHosts: true,
   },
 });
+// Trigger restart for tailwindcss v4 config reload

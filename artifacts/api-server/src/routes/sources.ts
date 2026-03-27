@@ -250,6 +250,36 @@ const SOURCES = [
     avgTrustRating: 4.5,
     totalRatings: 0,
   },
+  {
+    id: "reasoning-multiplier-2025",
+    title: "Reasoning models compute at 30x to 50x the energy of a standard prompt",
+    authors: ["Dauner et al.", "URI AI Lab"],
+    institution: "Various",
+    year: 2025,
+    url: "#",
+    category: "academic",
+    methodology: "Analysis of chain-of-thought processing wherein models execute hidden reasoning tokens before outputting responses.",
+    keyFindings: "Models like OpenAI o1, o3, and DeepSeek R1 generate thousands of invisible 'thinking tokens' via chain-of-thought loops before outputting an answer. This pushes energy consumption to an average of 10 Wh to 40 Wh per query, roughly 30x to 50x the energy of a standard text prompt.",
+    limitations: "Focuses exclusively on text-based chain-of-thought generation.",
+    dataAvailability: "none",
+    avgTrustRating: 4.0,
+    totalRatings: 0,
+  },
+  {
+    id: "embodied-carbon-2022",
+    title: "Measuring the Carbon Intensity of AI in Cloud Instances",
+    authors: ["Jesse Dodge et al."],
+    institution: "Allen Institute for AI (AI2)",
+    year: 2022,
+    url: "https://arxiv.org/abs/2206.05229",
+    category: "academic",
+    methodology: "Measured the lifecycle emissions and operational carbon intensity of AI workloads run on cloud instances across different geographic regions.",
+    keyFindings: "Operational energy footprint (kWh) does not account for 'embodied carbon'—the significant environmental cost of manufacturing and disposing of the GPUs themselves. Embodied carbon can represent a substantial portion of the total lifecycle emissions for hardware.",
+    limitations: "Evaluates standard cloud GPU lifecycles, which may not perfectly align with specialized TPU pipelines.",
+    dataAvailability: "full",
+    avgTrustRating: 4.6,
+    totalRatings: 0,
+  }
 ];
 
 router.get("/sources", (_req, res) => {

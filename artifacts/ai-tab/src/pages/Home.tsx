@@ -1,8 +1,10 @@
-import { useState, type ReactNode } from "react";
-import { X, ExternalLink, BarChart2, Leaf, BookOpen, Coffee, ChevronRight, ChevronLeft } from "lucide-react";
+import { useState, useEffect, type ReactNode } from "react";
+import { X, ExternalLink, BarChart2, Leaf, BookOpen, Coffee, ChevronRight, ChevronLeft, Info, Moon, Sun, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid, ReferenceLine } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSources } from "@/hooks/use-sources";
+import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "next-themes";
 
 // ─── ENERGY ESTIMATE TIERS ───────────────────────────────────────────────────
 // Three separate published estimates — chosen independently of water location.
@@ -536,7 +538,7 @@ function ComparableDropdown({ value, onChange, options }: { value: string; onCha
   return (
     <span className="relative inline-flex items-center">
       <button onClick={() => setOpen(v => !v)}
-        className="cursor-pointer inline-flex items-center gap-1.5 transition-all outline-none text-gray-500 hover:text-gray-700"
+        className="cursor-pointer inline-flex items-center gap-1.5 transition-all outline-none text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
         style={{ fontFamily: "'Anthropic Serif', serif" }}>
         <span>{selected.label}</span>
         <svg width="10" height="6" viewBox="0 0 12 8" fill="none" style={{ opacity: 0.6, flexShrink: 0, marginTop: 2 }}>
@@ -550,13 +552,13 @@ function ComparableDropdown({ value, onChange, options }: { value: string; onCha
             <motion.div
               initial={{ opacity: 0, y: -4, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }} transition={{ duration: 0.12 }}
-              className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-[60] p-2 min-w-[200px] flex flex-col gap-1"
+              className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-2xl shadow-xl z-[60] p-2 min-w-[200px] flex flex-col gap-1"
               style={{ fontFamily: "'Anthropic Sans', sans-serif", fontSize: "14px" }}>
               {options.map(o => {
                 const isSelected = o.id === value;
                 return (
                   <button key={o.id} onClick={() => { onChange(o.id); setOpen(false); }}
-                    className={`text-left px-3 py-2 rounded-xl transition-colors ${isSelected ? "bg-gray-100 font-bold" : "hover:bg-gray-50 font-medium"} text-gray-700`}>
+                    className={`text-left px-3 py-2 rounded-xl transition-colors ${isSelected ? "bg-gray-100 dark:bg-gray-800 font-bold" : "hover:bg-gray-50 dark:hover:bg-gray-800/50 font-medium"} text-gray-700 dark:text-gray-300`}>
                     {o.label}
                   </button>
                 );
@@ -572,6 +574,7 @@ function ComparableDropdown({ value, onChange, options }: { value: string; onCha
 // ─── INLINE PILL DROPDOWN ────────────────────────────────────────────────────
 function InlineDropdown({ value, onChange }: { value: string; onChange: (id: string) => void }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const scenariosByCategory = SCENARIOS.filter(s => s.category !== "Typical Usage").reduce((acc, s) => {
     if (!acc[s.category]) acc[s.category] = [];
     acc[s.category].push(s);
@@ -587,17 +590,16 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
   return (
     <span className="inline-flex items-stretch h-full">
       <button onClick={() => setOpen(v => !v)}
-        className="cursor-pointer inline-flex items-center gap-2 font-semibold transition-all hover:bg-gray-50 active:bg-gray-100 rounded-l-[100px] focus:outline-none"
+        className="cursor-pointer inline-flex items-center gap-2 font-semibold transition-all hover:bg-gray-50 dark:hover:bg-[#1a1a1a] active:bg-gray-100 dark:active:bg-[#222222] rounded-l-[100px] focus:outline-none dark:text-gray-100"
         style={{
           padding: "6px 14px 6px 22px",
           background: "transparent",
           fontSize: "inherit",
           fontFamily: "'Anthropic Serif', serif",
-          color: "#1f2937",
           lineHeight: "inherit",
         }}>
         {selected.text}
-        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" style={{ opacity: 0.55, flexShrink: 0, marginTop: 1 }}>
+        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" style={{ opacity: 0.55, flexShrink: 0, marginTop: 1 }} className="text-gray-900 dark:text-gray-100">
           <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
@@ -608,15 +610,17 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
             <motion.div
               initial={{ opacity: 0, y: -4, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }} transition={{ duration: 0.12 }}
-              className="absolute top-full left-1/2 -translate-x-1/2 mt-3 bg-white border border-gray-200 rounded-3xl shadow-2xl z-[60] p-4 max-h-[75vh] overflow-y-auto w-[90vw] max-w-[800px] text-left"
-              style={{ fontFamily: "'Anthropic Sans', sans-serif", fontSize: "14px" }}>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              className="absolute top-full left-1/2 -translate-x-1/2 mt-3 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl z-[60] flex flex-col overflow-hidden w-[90vw] max-w-[800px] text-left"
+              style={{
+                fontFamily: "'Anthropic Serif', serif",
+                fontSize: "min(1.2rem, 16px)",
+              }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 max-h-[calc(75vh-20px)] overflow-y-auto">
                 {Object.entries(scenariosByCategory).map(([category, items]) => (
-                  <div key={category} className="flex flex-col gap-2 bg-gray-100/50 rounded-2xl p-4 border border-gray-100">
+                  <div key={category} className="flex flex-col gap-2 bg-gray-100/50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-800">
                     <div className="text-[11px] font-bold tracking-widest text-gray-500 uppercase mb-1 px-1">{category}</div>
                     <div className="flex flex-col gap-1.5 overflow-hidden">
-                      {items.map(s => {
+                      {items.filter(s => s.dropdownText.toLowerCase().includes(search.toLowerCase()) || s.verb.toLowerCase().includes(search.toLowerCase())).map(s => {
                         const e = getEnergyWh(s.id, s.baseEnergyWh, "commercial");
                         const rgb = getEnergyColorRgb(e);
                         
@@ -632,7 +636,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                             style={{ backgroundColor: baseBg, borderColor: baseBorder }}
                             onMouseEnter={e => { e.currentTarget.style.backgroundColor = hoverBg; e.currentTarget.style.borderColor = hoverBorder; }}
                             onMouseLeave={e => { e.currentTarget.style.backgroundColor = baseBg; e.currentTarget.style.borderColor = baseBorder; }}
-                            className={`text-left px-3 py-2 rounded-xl transition-all shadow-sm text-[13px] flex items-center min-h-[44px] border-2 text-gray-800 ${isSelected ? "font-bold shadow-md" : "font-medium"}`}>
+                            className={`text-left px-3 py-2 rounded-xl transition-all shadow-sm text-[13px] flex items-center min-h-[44px] border-2 text-gray-800 dark:text-gray-200 ${isSelected ? "font-bold shadow-md" : "font-medium"}`}>
                             <span className="line-clamp-2 leading-tight">{s.verb} {s.dropdownText}</span>
                           </button>
                         );
@@ -641,14 +645,14 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                   </div>
                 ))}
               </div>
-              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-100">
+              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 p-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <button onClick={() => { onChange("custom"); setOpen(false); }}
-                    className={`px-4 py-1.5 rounded-xl transition-all border text-[13px] ${"custom" === value ? "bg-white border-black border-2 font-bold text-black shadow-sm" : "bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 font-medium text-gray-700 shadow-sm"}`}>
+                    className={`px-4 py-1.5 rounded-xl transition-all border text-[13px] ${"custom" === value ? "bg-white dark:bg-gray-700 border-black dark:border-white border-2 font-bold text-black dark:text-white shadow-sm" : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 font-medium text-gray-700 dark:text-gray-300 shadow-sm"}`}>
                     Custom
                   </button>
 
-                  <div className="h-6 w-px bg-gray-200 hidden sm:block" />
+                  <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block" />
 
                   {/* Typical usage distinct buttons */}
                   <div className="flex items-center gap-2">
@@ -661,7 +665,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                       return (
                         <button key={p.id}
                           onClick={() => { onChange(p.id); setOpen(false); }}
-                          className={`px-3 py-1.5 rounded-xl text-[12px] transition-all flex items-center gap-1.5 border ${isSelected ? 'font-bold shadow-md bg-white' : 'font-medium hover:bg-gray-50 text-gray-600 bg-white'}`}
+                          className={`px-3 py-1.5 rounded-xl text-[12px] transition-all flex items-center gap-1.5 border ${isSelected ? 'font-bold shadow-md bg-white dark:bg-gray-700' : 'font-medium hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900'}`}
                           style={isSelected ? {
                             color: `rgb(${Math.max(0,rgb.r-40)},${Math.max(0,rgb.g-40)},${Math.max(0,rgb.b-40)})`,
                             borderColor: `rgba(${rgb.r},${rgb.g},${rgb.b},0.6)`
@@ -738,41 +742,63 @@ function InlineMultiplier({ value, onChange }: { value: number; onChange: (v: nu
 }
 
 // ─── DUAL ESTIMATE SELECTORS ─────────────────────────────────────────────────
-function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTierFixed }: {
+function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTierFixed, showReasoning, isReasoningModel, onReasoningChange }: {
   tier: ModelTier; wueTier: WueTier; onTierChange: (t: ModelTier) => void; onWueTierChange: (w: WueTier) => void; isTierFixed?: boolean;
+  showReasoning?: boolean; isReasoningModel?: boolean; onReasoningChange?: (v: boolean) => void;
 }) {
   const displayTier = isTierFixed ? "commercial" : tier;
   return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div className="flex items-center gap-2">
-        <span className="text-[9px] text-gray-400 font-medium w-[50px] text-right leading-tight shrink-0">Energy<br/>estimate</span>
-        <div className="flex gap-0.5 bg-gray-100 rounded-full p-0.5">
-          {(["research", "commercial", "frontier"] as ModelTier[]).map(t => (
-            <button key={t} onClick={() => !isTierFixed && onTierChange(t)}
-              disabled={isTierFixed && t !== "commercial"}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${(isTierFixed ? t === "commercial" : tier === t) ? "bg-white text-black shadow-sm" : isTierFixed ? "text-gray-300 opacity-50 cursor-not-allowed" : "text-gray-400 hover:text-gray-600"}`}>
-              {TIER_META[t].rangeLabel}
-            </button>
-          ))}
+    <div className="flex flex-col items-center gap-1.5 relative w-full max-w-lg mx-auto">
+      <div className="flex items-center justify-center relative w-full gap-1.5 sm:gap-4 flex-nowrap w-max sm:w-full transform scale-[0.9] sm:scale-100">
+        
+        {/* Energy Estimate Group (Inline Right) */}
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] text-gray-400 dark:text-gray-500 font-medium w-[50px] text-right leading-tight shrink-0">Energy<br/>estimate</span>
+          <div className="flex gap-0.5 bg-gray-100 dark:bg-gray-800/80 rounded-full p-0.5">
+            {(["research", "commercial", "frontier"] as ModelTier[]).map(t => (
+              <button key={t} onClick={() => !isTierFixed && onTierChange(t)}
+                disabled={isTierFixed && t !== "commercial"}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${(isTierFixed ? t === "commercial" : tier === t) ? "bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm" : isTierFixed ? "text-gray-300 dark:text-gray-600 opacity-50 cursor-not-allowed" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}>
+                {TIER_META[t].rangeLabel}
+              </button>
+            ))}
+          </div>
         </div>
+
+        {/* Reasoning AI Toggle (Inline Left) */}
+        {showReasoning && onReasoningChange && (
+          <div className="relative group flex items-center shrink-0">
+            <button 
+              onClick={() => onReasoningChange(!isReasoningModel)}
+              className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-full text-[12px] sm:text-[11px] font-medium transition-all shadow-sm border ${isReasoningModel ? 'bg-gray-900 border-gray-900 text-white dark:bg-gray-100 dark:border-gray-100 dark:text-gray-900' : 'bg-white border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 dark:bg-transparent dark:border-gray-700 dark:text-gray-500 dark:hover:text-gray-300'}`}
+            >
+               Reasoning AI
+            </button>
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 p-2 bg-gray-900 text-white text-[10px] sm:text-[11px] leading-relaxed rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-center font-sans shadow-xl pointer-events-none">
+              Models that 'think' before answering generate invisible background tokens, using up to 30x more energy per prompt.
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-b-gray-900"></div>
+            </div>
+          </div>
+        )}
+
       </div>
-      <div className="flex items-center gap-2">
-        <span className="text-[9px] text-gray-400 font-medium w-[50px] text-right leading-tight shrink-0">Water<br/>location</span>
-        <div className="flex gap-0.5 bg-gray-100 rounded-full p-0.5">
+      <div className="flex items-center gap-2 mt-1 relative w-full justify-center">
+        <span className="text-[9px] text-gray-400 dark:text-gray-500 font-medium w-[50px] text-right leading-tight shrink-0">Water<br/>location</span>
+        <div className="flex gap-0.5 bg-gray-100 dark:bg-gray-800/80 rounded-full p-0.5">
           {(["efficient", "average", "intensive"] as WueTier[]).map(w => (
             <button key={w} onClick={() => onWueTierChange(w)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${wueTier === w ? "bg-white text-black shadow-sm" : "text-gray-400 hover:text-gray-600"}`}>
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${wueTier === w ? "bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}>
               {WUE_META[w].label}
             </button>
           ))}
         </div>
       </div>
       {isTierFixed && (
-        <p className="text-[10px] text-gray-600 font-medium bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 mt-2 mb-1">
+        <p className="text-[10px] text-gray-600 dark:text-amber-800 font-medium bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 mt-1 mb-0.5">
           Only "Average" (Standard) data is available for this medium
         </p>
       )}
-      <p className="text-[10px] text-gray-400 italic text-center max-w-xs leading-relaxed mt-0.5">
+      <p className="text-[10px] text-gray-400 dark:text-gray-500 italic text-center max-w-sm leading-relaxed mt-0.5">
         {TIER_META[displayTier].source} (energy) · {WUE_META[wueTier].source} (water)
       </p>
     </div>
@@ -845,28 +871,28 @@ function CustomCalculator({ counts, onChange, totalE, totalW }: {
   totalW: number;
 }) {
   return (
-    <div className="flex flex-col gap-4 w-full max-w-lg mx-auto">
+    <div className="flex flex-col gap-3 w-full max-w-lg mx-auto mt-2">
       {CUSTOM_TASKS.map(t => (
-        <div key={t.id} className="flex items-center gap-3">
-          <label className="text-xs text-gray-500 w-44 shrink-0 leading-tight">{t.label}</label>
+        <div key={t.id} className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
+          <label className="text-[13px] font-medium text-gray-700 dark:text-gray-300 w-44 shrink-0 leading-tight">{t.label}</label>
           <input type="range" min={0} max={t.max} step={t.step} value={counts[t.id] ?? 0}
-            onChange={e => onChange(t.id, Number(e.target.value))} className="flex-1 accent-black" />
-          <span className="text-xs font-medium w-10 text-right tabular-nums">{counts[t.id] ?? 0}</span>
+            onChange={e => onChange(t.id, Number(e.target.value))} className="flex-1 accent-gray-900 dark:accent-gray-100 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer" />
+          <span className="text-[13px] font-bold w-12 text-right tabular-nums text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-900 px-2 py-1 rounded-md shadow-sm border border-gray-200 dark:border-gray-700">{counts[t.id] ?? 0}</span>
         </div>
       ))}
-      <div className="border-t border-gray-100 pt-4 text-center" style={{ fontFamily: "'Anthropic Serif', serif" }}>
+      <div className="border-t border-gray-100 dark:border-gray-800 pt-5 mt-2 text-center" style={{ fontFamily: "'Anthropic Serif', serif" }}>
         {totalE === 0
-          ? <p className="text-gray-400 text-sm italic">Adjust sliders to see your usage.</p>
+          ? <p className="text-gray-400 dark:text-gray-500 text-sm italic">Adjust sliders to see your usage.</p>
           : <>
-            <p className="text-[1.1rem] leading-[2] text-black">
+            <p className="text-[1.15rem] leading-[2] text-black dark:text-gray-100">
               Your session used{" "}
-              <strong style={{ borderBottom: "2px solid currentColor", whiteSpace: "nowrap" }}>{fmtEnergy(totalE)}</strong>{" "}
+              <strong style={{ borderBottom: "2px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtEnergy(totalE)}</strong>{" "}
               of energy and{" "}
-              <strong style={{ borderBottom: "2px solid currentColor", whiteSpace: "nowrap" }}>{fmtWater(totalW)}</strong>{" "}
+              <strong style={{ borderBottom: "2px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtWater(totalW)}</strong>{" "}
               of water.
             </p>
-            <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
-              That's {equivEnergyVal(totalE, "netflix")} of Netflix and {equivWaterVal(totalW, "handwash")} handwashes.
+            <p className="text-[1.05rem] text-gray-500 dark:text-gray-400 mt-2" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+              That's <span className="font-medium text-gray-500 dark:text-gray-400">{equivEnergyVal(totalE, "netflix")}</span> of Netflix and <span className="font-medium text-gray-500 dark:text-gray-400">{equivWaterVal(totalW, "handwash")}</span> handwashes.
             </p>
           </>
         }
@@ -1137,6 +1163,13 @@ function SourcesModal({ onClose }: { onClose: () => void }) {
                   <li className="list-disc"><strong>Water-intensive (6.0 mL/Wh, IEA 2024):</strong> upper range for hot-climate data centers (Texas, Arizona) using evaporative cooling during summer months.</li>
                 </ul>
               </div>
+              <div>
+                <p className="font-semibold text-black text-sm mb-2">Reasoning Models & Embodied Carbon</p>
+                <ul className="ml-4 flex flex-col gap-1.5">
+                  <li className="list-disc"><strong>Reasoning AI (o1, DeepSeek):</strong> Models that 'think' via chain-of-thought loops generate thousands of invisible background tokens before outputting an answer. This pushes energy consumption up to 30x higher than a standard prompt (Dauner et al., 2025; URI AI Lab, 2025).</li>
+                  <li className="list-disc"><strong>Embodied Carbon:</strong> These calculations measure only <em>operational</em> energy. They do not account for the significant environmental cost of manufacturing and disposing of the AI hardware and GPUs themselves (Dodge et al., 2022).</li>
+                </ul>
+              </div>
             </div>
           )}
           {tab === "sources" && (
@@ -1244,80 +1277,116 @@ function GetInvolvedModal({ onClose }: { onClose: () => void }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function Home() {
-  const [selectedId, setSelectedId] = useState("app-build");
+  const [selectedId, setSelectedId] = useState("short-chat");
   const [tier, setTier] = useState<ModelTier>("commercial");
   const [wueTier, setWueTier] = useState<WueTier>("average");
+  const { theme, setTheme } = useTheme();
   const [showMath, setShowMath] = useState(false);
   const [showSources, setShowSources] = useState(false);
   const [showAction, setShowAction] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [showGetInvolved, setShowGetInvolved] = useState(false);
+  const [showFinePrint, setShowFinePrint] = useState(false);
   const [multiplier, setMultiplier] = useState(1);
   const [energyComp, setEnergyComp] = useState("netflix");
   const [waterComp, setWaterComp] = useState("handwash");
   const [customCounts, setCustomCounts] = useState<Record<string, number>>(
     Object.fromEntries(CUSTOM_TASKS.map(t => [t.id, t.defaultVal]))
   );
-
-  const handleCustomChange = (id: string, val: number) =>
-    setCustomCounts(c => ({ ...c, [id]: val }));
+  const [isReasoningModel, setIsReasoningModel] = useState(false);
+  const { toast } = useToast();
 
   const isCustom = selectedId === "custom";
   const scenario = SCENARIOS.find(s => s.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (!scenario) return;
+    const textToCheck = (scenario.id + " " + scenario.dropdownText + " " + scenario.category).toLowerCase();
+    const keywords = ["code", "coding", "math", "o1", "deepseek", "reasoning", "logic", "complex"];
+    
+    // Auto-select reasoning mode if keywords match and it's a valid text scenario
+    const isValidTextTask = !["image", "video", "training-llm"].includes(scenario.id);
+    if (isValidTextTask && keywords.some(k => textToCheck.includes(k))) {
+      setIsReasoningModel(true);
+      toast({
+        title: "Reasoning Mode active",
+        description: "Auto-switched to Reasoning AI. Chain-of-thought tasks require significantly more compute.",
+        duration: 4000,
+      });
+    } else {
+      setIsReasoningModel(false);
+    }
+  }, [selectedId, toast]);
   const wue = WUE_VALUES[wueTier];
 
   const customTotalE = CUSTOM_TASKS.reduce((s, t) => s + (customCounts[t.id] ?? 0) * t.unitEnergyWh, 0);
   const customTotalW = CUSTOM_TASKS.reduce((s, t) => s + (customCounts[t.id] ?? 0) * t.unitWaterMl, 0);
 
-  const energyWh = (isCustom ? customTotalE : scenario ? getEnergyWh(scenario.id, scenario.baseEnergyWh, tier) : 0) * (isCustom ? 1 : multiplier);
-  const waterMl  = (isCustom ? customTotalW : scenario ? getWaterMl(scenario.id, scenario.baseWaterMl, energyWh / (isCustom ? 1 : multiplier), scenario.baseEnergyWh, wue, tier) : 0) * (isCustom ? 1 : multiplier);
+  const baseTaskEnergy = isCustom ? customTotalE : scenario ? getEnergyWh(scenario.id, scenario.baseEnergyWh, tier) : 0;
+  const baseTaskWater  = isCustom ? customTotalW : scenario ? getWaterMl(scenario.id, scenario.baseWaterMl, baseTaskEnergy, scenario.baseEnergyWh, wue, tier) : 0;
+
+  const isTextTask = isCustom || (scenario && !["image", "video", "training-llm"].includes(scenario.id));
+  const reasoningMult = (isReasoningModel && isTextTask) ? 30 : 1;
+  const userMult = isCustom ? 1 : multiplier;
+
+  const energyWh = baseTaskEnergy * userMult * reasoningMult;
+  const waterMl  = baseTaskWater  * userMult * reasoningMult;
 
   return (
-    <div className="h-screen bg-white flex flex-col overflow-hidden" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+    <div className="h-screen bg-white dark:bg-[#0a0a0a] flex flex-col overflow-hidden transition-colors duration-500 text-gray-900 dark:text-gray-100" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+
+      {/* Top Right Theme Toggle */}
+      <div className="fixed top-5 right-5 sm:top-6 sm:right-6 z-50">
+        <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="flex items-center justify-center bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 w-10 h-10 sm:w-11 sm:h-11 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95 border border-gray-200/50 dark:border-gray-700/50"
+          title="Toggle Dark Mode">
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+      </div>
 
       {/* Bottom Right FABs — icon slides left, text revealed to the right */}
       <div className="fixed bottom-6 right-6 z-40 hidden md:flex flex-col items-end gap-3">
         {/* Action FAB (Top) — Leaf icon */}
         <button onClick={() => setShowAction(true)}
-          className="bg-white overflow-hidden rounded-full shadow-lg border border-gray-100/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
+          className="bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
           style={{ width: 52, transition: 'width 0.35s cubic-bezier(0.25,1,0.5,1), box-shadow 0.3s' }}
           onMouseEnter={e => { e.currentTarget.style.width = '200px'; }}
           onMouseLeave={e => { e.currentTarget.style.width = '52px'; }}
           title="How to fix this">
-          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-green-600">
+          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-green-600 dark:text-green-500">
             <Leaf size={20} />
           </div>
-          <span className="whitespace-nowrap font-medium text-sm text-gray-800 pr-5">
+          <span className="whitespace-nowrap font-medium text-sm text-gray-800 dark:text-gray-100 pr-5">
             Offset My Impact
           </span>
         </button>
 
         {/* Sources FAB (Middle) — BookOpen icon */}
         <button onClick={() => setShowSources(true)}
-          className="bg-white overflow-hidden rounded-full shadow-lg border border-gray-100/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
+          className="bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
           style={{ width: 52, transition: 'width 0.35s cubic-bezier(0.25,1,0.5,1), box-shadow 0.3s' }}
           onMouseEnter={e => { e.currentTarget.style.width = '200px'; }}
           onMouseLeave={e => { e.currentTarget.style.width = '52px'; }}
           title="Methodology">
-          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-blue-500">
+          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-blue-500 dark:text-blue-400">
             <BookOpen size={20} />
           </div>
-          <span className="whitespace-nowrap font-medium text-sm text-gray-800 pr-5">
+          <span className="whitespace-nowrap font-medium text-sm text-gray-800 dark:text-gray-100 pr-5">
             Sources & Data
           </span>
         </button>
 
         {/* Coffee FAB (Bottom) — Coffee icon */}
         <button onClick={() => setShowGetInvolved(true)}
-          className="bg-white overflow-hidden rounded-full shadow-lg border border-gray-100/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
+          className="bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
           style={{ width: 52, transition: 'width 0.35s cubic-bezier(0.25,1,0.5,1), box-shadow 0.3s' }}
           onMouseEnter={e => { e.currentTarget.style.width = '200px'; }}
           onMouseLeave={e => { e.currentTarget.style.width = '52px'; }}
           title="Get Involved">
-          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-yellow-500">
+          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-yellow-500 dark:text-yellow-400">
             <Coffee size={20} />
           </div>
-          <span className="whitespace-nowrap font-medium text-sm text-gray-800 pr-5">
+          <span className="whitespace-nowrap font-medium text-sm text-gray-800 dark:text-gray-100 pr-5">
             Feedback & Coffee
           </span>
         </button>
@@ -1339,7 +1408,7 @@ export default function Home() {
                   </p>
                   <CustomCalculator
                     counts={customCounts}
-                    onChange={handleCustomChange}
+                    onChange={(id, val) => setCustomCounts(prev => ({ ...prev, [id]: val }))}
                     totalE={customTotalE}
                     totalW={customTotalW}
                   />
@@ -1347,22 +1416,22 @@ export default function Home() {
               ) : scenario ? (
                 <>
                   {/* Primary block: dropdown + data sentence — same font, dominant element */}
-                  <div className="flex flex-col items-center gap-3 text-[1.15rem] sm:text-[1.35rem] md:text-[1.65rem] leading-[1.5] text-black text-center"
+                  <div className="flex flex-col items-center gap-3 text-[1.15rem] sm:text-[1.35rem] md:text-[1.65rem] leading-[1.5] text-black dark:text-gray-100 text-center"
                     style={{ fontFamily: "'Anthropic Serif', serif" }}>
                     
                     <div className="flex flex-col items-center gap-2">
                       {(() => {
                         const rgb = getEnergyColorRgb(energyWh);
                         const pillStyle = {
-                          borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.7)`,
+                          borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`,
                           boxShadow: `0 0 20px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35), 0 0 50px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15), 0 0 80px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`,
                           transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
                         };
 
                         return (
-                          <span style={pillStyle} className="inline-flex items-stretch flex-wrap justify-center bg-white border-2 rounded-[100px] hover:shadow-lg transition-all relative">
+                          <span style={pillStyle} className="inline-flex items-stretch flex-wrap justify-center bg-white dark:bg-[#121212] border-[3px] rounded-[100px] hover:shadow-lg transition-all relative">
                             <InlineDropdown value={selectedId} onChange={setSelectedId} />
-                            <div className="w-px bg-gray-200 my-2" />
+                            <div className="w-px bg-gray-200 dark:bg-gray-700 my-2" />
                             <InlineMultiplier value={multiplier} onChange={setMultiplier} />
                           </span>
                         );
@@ -1371,35 +1440,67 @@ export default function Home() {
 
                     <div className="mt-2 md:mt-3 flex flex-wrap items-baseline justify-center gap-x-2 gap-y-2 px-4">
                       <span>will use</span>
-                      <strong className="inline-block min-w-[5.5rem] text-center whitespace-nowrap" style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px" }}>{fmtEnergy(energyWh)}</strong>
+                      <strong className="inline-block min-w-[5.5rem] text-center whitespace-nowrap" style={{ borderBottom: "3px solid currentColor", paddingBottom: "1px" }}>{fmtEnergy(energyWh)}</strong>
                       <span>of energy and</span>
-                      <strong className="inline-block min-w-[5.5rem] text-center whitespace-nowrap" style={{ borderBottom: "2.5px solid currentColor", paddingBottom: "1px" }}>{fmtWater(waterMl)}</strong>
+                      <strong className="inline-block min-w-[5.5rem] text-center whitespace-nowrap" style={{ borderBottom: "3px solid currentColor", paddingBottom: "1px" }}>{fmtWater(waterMl)}</strong>
                       <span>of water.</span>
                     </div>
                   </div>
 
                   {/* Secondary: equivalency — comparable words ARE the dropdowns */}
-                  <div className="text-[0.95rem] sm:text-[1.05rem] md:text-[1.15rem] leading-[1.6] text-gray-500 text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-4"
+                  <div className="text-[0.9rem] min-[400px]:text-[1.05rem] sm:text-[1.15rem] md:text-[1.25rem] leading-[1.6] text-gray-500 dark:text-gray-400 text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-2 sm:px-4"
                     style={{ fontFamily: "'Anthropic Serif', serif" }}>
                     <span>That's</span>
-                    <span className="font-medium text-gray-500">{equivEnergyVal(energyWh, energyComp)}</span>
+                    <span className="font-medium text-gray-500 dark:text-gray-400">{equivEnergyVal(energyWh, energyComp)}</span>
                     <ComparableDropdown value={energyComp} onChange={setEnergyComp} options={ENERGY_COMPARABLES} />
                     <span>and</span>
-                    <span className="font-medium text-gray-500">{equivWaterVal(waterMl, waterComp)}</span>
-                    <ComparableDropdown value={waterComp} onChange={setWaterComp} options={WATER_COMPARABLES} />
-                    <span>.</span>
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
+                      <span className="font-medium text-gray-500 dark:text-gray-400">{equivWaterVal(waterMl, waterComp)}</span>
+                      <ComparableDropdown value={waterComp} onChange={setWaterComp} options={WATER_COMPARABLES} />
+                      <span className="-ml-1">.</span>
+                    </span>
                   </div>
 
                   {/* Tertiary: selectors */}
-                  <EstimateSelectors tier={tier} wueTier={wueTier} onTierChange={setTier} onWueTierChange={setWueTier} isTierFixed={!scenario.tierSensitive} />
+                  <div className="flex flex-col items-center gap-4 mt-2 mb-1 w-full relative z-10">
+                    <EstimateSelectors 
+                      tier={tier} wueTier={wueTier} onTierChange={setTier} onWueTierChange={setWueTier} isTierFixed={!scenario.tierSensitive}
+                      showReasoning={scenario ? !["image", "video", "training-llm"].includes(scenario.id) : false}
+                      isReasoningModel={isReasoningModel}
+                      onReasoningChange={setIsReasoningModel}
+                    />
+                  </div>
 
                   {/* Fine print */}
-                  <p className="text-[11px] md:text-xs text-gray-400 font-light leading-relaxed text-center italic max-w-xs">
-                    {scenario.clarifying}{" "}
-                    <button onClick={() => setShowMath(true)} className="underline underline-offset-2 hover:text-black transition-colors not-italic font-medium">
-                      Wait, how did we get these numbers? →
+                  <div className="flex flex-col items-center gap-1.5 max-w-lg mt-2 px-4">
+                    <button 
+                      onClick={() => setShowFinePrint(!showFinePrint)}
+                      className="text-[11px] md:text-xs text-gray-400 dark:text-gray-500 font-medium hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex items-center gap-1"
+                    >
+                      Show disclaimers & methodology {showFinePrint ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     </button>
-                  </p>
+
+                    <AnimatePresence>
+                      {showFinePrint && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden flex flex-col items-center gap-1.5 pt-2"
+                        >
+                          <p className="text-xs md:text-sm text-gray-400 dark:text-gray-500 font-light leading-relaxed text-center italic">
+                            {scenario.clarifying}{" "}
+                            <button onClick={() => setShowMath(true)} className="underline underline-offset-2 hover:text-black dark:hover:text-white transition-colors not-italic font-medium">
+                              Wait, how did we get these numbers? →
+                            </button>
+                          </p>
+                          <p className="text-[10px] md:text-xs text-gray-400/80 dark:text-gray-500/80 font-light text-center leading-relaxed mt-2" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+                            Note: These calculations measure operational energy. They do not include 'embodied carbon'—the significant environmental cost of manufacturing and disposing of AI hardware.
+                          </p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </>
               ) : null}
             </motion.div>
@@ -1410,18 +1511,18 @@ export default function Home() {
 
       {/* Original Coffee FAB has been moved to the bottom right FAB group. */}
 
-      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-40 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-full shadow-xl border border-gray-100 w-[95%] max-w-[340px] justify-between">
-        <button onClick={() => setShowSources(true)} className="flex flex-col items-center gap-1.5 text-gray-500 hover:text-gray-900 active:text-black flex-1 transition-colors">
+      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-4 py-2.5 rounded-full shadow-xl border border-gray-100 dark:border-gray-800 w-[95%] max-w-[340px] justify-between">
+        <button onClick={() => setShowSources(true)} className="flex flex-col items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 active:text-black dark:active:text-white flex-1 transition-colors">
           <BookOpen size={18} />
           <span className="text-[10px] font-semibold tracking-wide">Sources</span>
         </button>
-        <div className="w-px h-8 bg-gray-200 shrink-0" />
-        <button onClick={() => setShowAction(true)} className="flex flex-col items-center gap-1.5 text-gray-500 hover:text-green-600 active:text-green-700 flex-1 transition-colors">
+        <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <button onClick={() => setShowAction(true)} className="flex flex-col items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-green-600 dark:hover:text-green-400 active:text-green-700 dark:active:text-green-300 flex-1 transition-colors">
           <Leaf size={18} />
           <span className="text-[10px] font-semibold tracking-wide">Action</span>
         </button>
-        <div className="w-px h-8 bg-gray-200 shrink-0" />
-        <button onClick={() => setShowGetInvolved(true)} className="flex flex-col items-center gap-1.5 text-gray-500 hover:text-yellow-600 active:text-yellow-700 flex-1 transition-colors">
+        <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <button onClick={() => setShowGetInvolved(true)} className="flex flex-col items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 active:text-yellow-700 dark:active:text-yellow-300 flex-1 transition-colors">
           <Coffee size={18} />
           <span className="text-[10px] font-semibold tracking-wide">Coffee</span>
         </button>
