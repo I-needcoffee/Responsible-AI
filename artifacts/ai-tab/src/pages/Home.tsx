@@ -748,8 +748,8 @@ function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTie
 }) {
   const displayTier = isTierFixed ? "commercial" : tier;
   return (
-    <div className="flex flex-col items-center gap-1.5 relative w-full max-w-lg mx-auto">
-      <div className="flex items-center justify-center relative w-full gap-1.5 sm:gap-4 flex-nowrap w-max sm:w-full transform scale-[0.9] sm:scale-100">
+    <div className="flex flex-col items-center gap-1.5 relative z-[100] w-full max-w-lg mx-auto">
+      <div className="flex items-center justify-center relative z-[100] w-full gap-1.5 sm:gap-4 flex-nowrap w-max sm:w-full transform scale-[0.9] sm:scale-100">
         
         {/* Energy Estimate Group (Inline Right) */}
         <div className="flex items-center gap-2">
@@ -767,14 +767,14 @@ function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTie
 
         {/* Reasoning AI Toggle (Inline Left) */}
         {showReasoning && onReasoningChange && (
-          <div className="relative group flex items-center shrink-0">
+          <div className="relative group flex items-center shrink-0 z-[100]">
             <button 
               onClick={() => onReasoningChange(!isReasoningModel)}
               className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-full text-[12px] sm:text-[11px] font-medium transition-all shadow-sm border ${isReasoningModel ? 'bg-gray-900 border-gray-900 text-white dark:bg-gray-100 dark:border-gray-100 dark:text-gray-900' : 'bg-white border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 dark:bg-transparent dark:border-gray-700 dark:text-gray-500 dark:hover:text-gray-300'}`}
             >
                Reasoning AI
             </button>
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 p-2 bg-gray-900 text-white text-[10px] sm:text-[11px] leading-relaxed rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-center font-sans shadow-xl pointer-events-none">
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 p-2 bg-gray-900 text-white text-[10px] sm:text-[11px] leading-relaxed rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-[999] text-center font-sans shadow-xl pointer-events-none">
               Models that 'think' before answering generate invisible background tokens, using up to 30x more energy per prompt.
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-b-gray-900"></div>
             </div>
