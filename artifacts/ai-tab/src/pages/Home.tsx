@@ -498,10 +498,10 @@ function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
   if (wh >= 1000) return { r: 225, g: 50, b: 35 }; // Deep red-orange
   if (wh <= 0)    return { r: 15,  g: 50, b: 35 }; // Dark forest green
 
-  const dkGreen = { r: 15,  g: 50,  b: 35  }; // Dark forest green
-  const ltGreen = { r: 245, g: 230, b: 80  }; // Light yellow
-  const golden  = { r: 235, g: 190, b: 30  }; // Golden yellow
-  const burnt   = { r: 225, g: 110, b: 30  }; // Warm orange
+  const dkGreen = { r: 15,  g: 50,  b: 40  }; // Dark forest green
+  const ltGreen = { r: 210, g: 170, b: 20  }; // Amber gold (at 3 Wh)
+  const golden  = { r: 210, g: 140, b: 20  }; // Deeper amber
+  const burnt   = { r: 210, g: 90,  b: 25  }; // Warm orange
 
   // 0 → 3 Wh: very deep green → light yellow
   if (wh <= 3) {
@@ -612,92 +612,96 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
               exit={{ opacity: 0, y: -4, scale: 0.97 }} transition={{ duration: 0.12 }}
               className="absolute top-full left-1/2 -translate-x-1/2 mt-3 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl z-[60] flex flex-col overflow-hidden w-[90vw] max-w-[800px] text-left"
               style={{
-                fontFamily: "'Anthropic Serif', serif",
+                fontFamily: "'Anthropic Sans', sans-serif",
                 fontSize: "min(1.2rem, 16px)",
               }}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 max-h-[calc(75vh-20px)] overflow-y-auto">
-                {Object.entries(scenariosByCategory).map(([category, items]) => (
-                  <div key={category} className="flex flex-col gap-2 bg-gray-100/50 dark:bg-gray-900/50 rounded-2xl p-4 border border-gray-100 dark:border-gray-800">
-                    <div className="text-[11px] font-bold tracking-widest text-gray-500 uppercase mb-1 px-1">{category}</div>
-                    <div className="flex flex-col gap-1.5 overflow-hidden">
-                      {items.filter(s => s.dropdownText.toLowerCase().includes(search.toLowerCase()) || s.verb.toLowerCase().includes(search.toLowerCase())).map(s => {
-                        const e = getEnergyWh(s.id, s.baseEnergyWh, "commercial");
-                        const rgb = getEnergyColorRgb(e);
-                        
-                        const isSelected = s.id === value;
-                        const baseBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.25)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.12)`;
-                        const hoverBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.35)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.22)`;
-                        const baseBorder = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.7)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`;
-                        const hoverBorder = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.9)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.5)`;
+              <div className="p-3 flex flex-col gap-3 max-h-[calc(80vh-20px)] overflow-y-auto">
 
-                        return (
-                          <button key={s.id} onClick={() => { onChange(s.id); setOpen(false); }}
-                            title={`${s.verb} ${s.dropdownText}`}
-                            style={{ backgroundColor: baseBg, borderColor: baseBorder }}
-                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = hoverBg; e.currentTarget.style.borderColor = hoverBorder; }}
-                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = baseBg; e.currentTarget.style.borderColor = baseBorder; }}
-                            className={`text-left px-3 py-2 rounded-xl transition-all shadow-sm text-[13px] flex items-center min-h-[44px] border-2 text-gray-800 dark:text-gray-200 ${isSelected ? "font-bold shadow-md" : "font-medium"}`}>
-                            <span className="line-clamp-2 leading-tight">{s.verb} {s.dropdownText}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="flex flex-wrap items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800 p-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <button onClick={() => { onChange("custom"); setOpen(false); }}
-                    className={`px-4 py-1.5 rounded-xl transition-all border text-[13px] ${"custom" === value ? "bg-white dark:bg-gray-700 border-black dark:border-white border-2 font-bold text-black dark:text-white shadow-sm" : "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 font-medium text-gray-700 dark:text-gray-300 shadow-sm"}`}>
-                    Custom
-                  </button>
-
-                  <div className="h-6 w-px bg-gray-200 dark:bg-gray-700 hidden sm:block" />
-
-                  {/* Typical usage distinct buttons */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mr-1">Averages:</span>
-                    {[{id: "typical-daily", label: "Daily"}, {id: "typical-weekly", label: "Weekly"}, {id: "typical-monthly", label: "Monthly"}].map(p => {
-                      const sc = SCENARIOS.find(s => s.id === p.id);
-                      const e = sc ? getEnergyWh(sc.id, sc.baseEnergyWh, "commercial") : 0;
+                {/* ── Average Compiled Usage at the top ── */}
+                <div>
+                  <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-1.5 px-1" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>Average Compiled Usage</div>
+                  <div className="flex gap-2">
+                    {SCENARIOS.filter(s => s.category === 'Typical Usage').map(s => {
+                      const e = getEnergyWh(s.id, s.baseEnergyWh, 'commercial');
                       const rgb = getEnergyColorRgb(e);
-                      const isSelected = value === p.id;
+                      const isSelected = s.id === value;
+                      const baseBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.25)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.12)`;
+                      const hoverBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.35)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.22)`;
+                      const baseBorder = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.7)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`;
+                      const hoverBorder = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.9)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.5)`;
+                      const label = s.dropdownText.replace('a typical ', '').replace('a ', '');
+                      const cap = label.charAt(0).toUpperCase() + label.slice(1);
                       return (
-                        <button key={p.id}
-                          onClick={() => { onChange(p.id); setOpen(false); }}
-                          className={`px-3 py-1.5 rounded-xl text-[12px] transition-all flex items-center gap-1.5 border ${isSelected ? 'font-bold shadow-md bg-white dark:bg-gray-700' : 'font-medium hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900'}`}
-                          style={isSelected ? {
-                            color: `rgb(${Math.max(0,rgb.r-40)},${Math.max(0,rgb.g-40)},${Math.max(0,rgb.b-40)})`,
-                            borderColor: `rgba(${rgb.r},${rgb.g},${rgb.b},0.6)`
-                          } : { borderColor: '#e5e7eb' }}>
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: `rgb(${rgb.r},${rgb.g},${rgb.b})` }} />
-                          {p.label}
+                        <button key={s.id} onClick={() => { onChange(s.id); setOpen(false); }}
+                          style={{ backgroundColor: baseBg, borderColor: baseBorder, fontFamily: "'Anthropic Sans', sans-serif" }}
+                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = hoverBg; e.currentTarget.style.borderColor = hoverBorder; }}
+                          onMouseLeave={e => { e.currentTarget.style.backgroundColor = baseBg; e.currentTarget.style.borderColor = baseBorder; }}
+                          className={`flex-1 text-center px-4 py-2 rounded-full text-[13px] border-2 transition-all ${isSelected ? 'font-bold shadow-md' : 'font-medium'} text-gray-800 dark:text-gray-200`}>
+                          {cap}
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                <div className="flex items-end gap-3 w-full max-w-[260px] mt-2 sm:mt-0">
-                  <div className="flex flex-col gap-1 flex-1">
-                    <div className="flex justify-between items-end text-[9px] font-bold text-gray-400 capitalize px-1 leading-none">
-                      <span className="text-left w-[35%]">0</span>
-                      <span className="text-center w-auto whitespace-nowrap">3 Wh</span>
-                      <span className="text-right flex-1 pr-1">1 kWh</span>
+                {/* ── Task categories grid ── */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {Object.entries(scenariosByCategory).map(([category, items]) => (
+                    <div key={category} className="flex flex-col gap-1.5 bg-gray-100/50 dark:bg-gray-900/50 rounded-2xl p-3 border border-gray-100 dark:border-gray-800">
+                      <div className="text-[10px] font-bold tracking-widest text-gray-500 uppercase px-1" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>{category}</div>
+                      <div className="flex flex-col gap-1">
+                        {items.filter(s => s.dropdownText.toLowerCase().includes(search.toLowerCase()) || s.verb.toLowerCase().includes(search.toLowerCase())).map(s => {
+                          const e = getEnergyWh(s.id, s.baseEnergyWh, 'commercial');
+                          const rgb = getEnergyColorRgb(e);
+                          const isSelected = s.id === value;
+                          const baseBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.25)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.12)`;
+                          const hoverBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.35)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.22)`;
+                          const baseBorder = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.7)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`;
+                          const hoverBorder = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.9)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.5)`;
+                          return (
+                            <button key={s.id} onClick={() => { onChange(s.id); setOpen(false); }}
+                              title={`${s.verb} ${s.dropdownText}`}
+                              style={{ backgroundColor: baseBg, borderColor: baseBorder, fontFamily: "'Anthropic Sans', sans-serif" }}
+                              onMouseEnter={e => { e.currentTarget.style.backgroundColor = hoverBg; e.currentTarget.style.borderColor = hoverBorder; }}
+                              onMouseLeave={e => { e.currentTarget.style.backgroundColor = baseBg; e.currentTarget.style.borderColor = baseBorder; }}
+                              className={`text-left px-2.5 py-1.5 rounded-lg text-[12px] flex items-center min-h-[34px] border-2 text-gray-800 dark:text-gray-200 transition-all ${isSelected ? 'font-bold shadow-md' : 'font-medium'}`}>
+                              <span className="line-clamp-2 leading-tight">{s.verb} {s.dropdownText}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                    <div className="flex w-full h-2 rounded-full overflow-hidden">
-                      <div className="w-[35%] h-full" style={{ background: "linear-gradient(to right, rgb(15,50,35), rgb(245,230,80))" }} />
-                      <div className="w-[2px] bg-white h-full shrink-0" />
-                      <div className="flex-1 h-full" style={{ background: "linear-gradient(to right, rgb(245,230,80) 0%, rgb(235,190,30) 40%, rgb(225,110,30) 100%)" }} />
+                  ))}
+                </div>
+
+                {/* ── Footer: Custom button + legend on same row ── */}
+                <div className="flex items-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-800" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+                  <button onClick={() => { onChange('custom'); setOpen(false); }}
+                    style={{ fontFamily: "'Anthropic Sans', sans-serif" }}
+                    className={`px-4 py-1.5 rounded-xl text-[12px] border transition-all shrink-0 ${value === 'custom' ? 'bg-white dark:bg-gray-700 border-black dark:border-white border-2 font-bold text-black dark:text-white shadow-sm' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium text-gray-700 dark:text-gray-300 shadow-sm'}`}>
+                    Custom
+                  </button>
+                  {/* Color scale legend: gradient bar + separate >100 kWh dot */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                      <div className="flex w-full h-2 rounded-full overflow-hidden">
+                        <div className="w-[35%] h-full" style={{ background: 'linear-gradient(to right, rgb(15,50,40), rgb(210,170,20))' }} />
+                        <div className="w-[2px] bg-white/80 h-full shrink-0" />
+                        <div className="flex-1 h-full" style={{ background: 'linear-gradient(to right, rgb(210,170,20) 0%, rgb(210,140,20) 40%, rgb(210,90,25) 100%)' }} />
+                      </div>
+                      <div className="flex justify-between text-[8.5px] text-gray-400 px-0.5" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+                        <span>0 Wh</span><span>3 Wh</span><span>1 kWh</span>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-col items-center gap-1 shrink-0">
-                    <span className="text-[9px] font-bold text-gray-400 leading-none">&gt;100 kWh</span>
-                    <div className="w-2 h-2 rounded-full mb-0" style={{ background: 'rgb(225,50,35)' }} />
+                    {/* Separate >100 kWh outlier indicator */}
+                    <div className="flex flex-col items-center gap-0.5 shrink-0">
+                      <div className="w-3 h-3 rounded-full" style={{ background: 'rgb(210,40,30)' }} />
+                      <span className="text-[8px] text-gray-400 leading-none whitespace-nowrap" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>&gt;100 kWh</span>
+                    </div>
                   </div>
                 </div>
               </div>
+
             </motion.div>
           </>
         )}
