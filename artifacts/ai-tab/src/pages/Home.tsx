@@ -185,7 +185,7 @@ export interface Scenario {
 // ─── SCENARIOS ───────────────────────────────────────────────────────────────
 const SCENARIOS: Scenario[] = [
   {
-    id: "short-chat", category: "Chat", verb: "Sending", dropdownText: "a short chat message", dropdownLabel: "a short chat message",
+    id: "short-chat", category: "Chat", verb: "Sending", dropdownText: "a chat message", dropdownLabel: "a short chat message",
     clarifying: "One short message to an AI assistant. Low-impact individually, but billions happen daily. Google's comprehensive Aug 2025 measurement: 0.24 Wh and 0.26 mL per median Gemini prompt — select 'Standard' to see this figure.",
     baseEnergyWh: 0.003, energyLow: 0.003, energyHigh: 2.9, baseWaterMl: 0.003 * 3.45,
     confidence: "high", tierSensitive: true,
@@ -195,7 +195,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "email-reply", category: "Writing & Office", verb: "Drafting", dropdownText: "an AI email reply", dropdownLabel: "an AI email reply",
+    id: "email-reply", category: "Writing & Office", verb: "Drafting", dropdownText: "an email reply", dropdownLabel: "an AI email reply",
     clarifying: "AI reads your email thread and drafts a reply — like Gmail Smart Reply, Copilot in Outlook, or asking an AI assistant to write a specific response. One of the lighter everyday AI tasks.",
     baseEnergyWh: 0.005, energyLow: 0.005, energyHigh: 3.0, baseWaterMl: 0.005 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -205,7 +205,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "ai-search", category: "Chat", verb: "Doing", dropdownText: "an AI web search", dropdownLabel: "an AI web search",
+    id: "ai-search", category: "Chat", verb: "Doing", dropdownText: "a web search", dropdownLabel: "an AI web search",
     clarifying: "One AI-powered search query — Perplexity, Google AI Overviews, or Bing Copilot. These make 3+ model passes: understanding your query, retrieving sources, and synthesizing an answer — which is why they use more than a single chat message.",
     baseEnergyWh: 0.01, energyLow: 0.01, energyHigh: 8.7, baseWaterMl: 0.01 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -215,7 +215,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "inbox-search", category: "Writing & Office", verb: "Searching and analyzing", dropdownText: "your inbox with AI", dropdownLabel: "inbox search and analysis",
+    id: "inbox-search", category: "Writing & Office", verb: "Searching", dropdownText: "your inbox", dropdownLabel: "inbox search and analysis",
     clarifying: "AI searches through your email history, finds relevant threads, and surfaces insights or action items. More intensive than a single reply because it processes many messages — like asking Gmail AI to find all emails about a project and summarize what needs doing.",
     baseEnergyWh: 0.03, energyLow: 0.03, energyHigh: 5.0, baseWaterMl: 0.03 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -225,7 +225,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "meeting-notes", category: "Writing & Office", verb: "Taking", dropdownText: "AI meeting notes (30 min)", dropdownLabel: "AI meeting notes",
+    id: "meeting-notes", category: "Writing & Office", verb: "Taking", dropdownText: "meeting notes", dropdownLabel: "AI meeting notes",
     clarifying: "30 minutes of real-time transcription plus an end-of-meeting summary. Combines continuous audio processing with one full generation call. Tools like Otter.ai, Fireflies.ai, or Microsoft Copilot for Teams.",
     baseEnergyWh: 0.06, energyLow: 0.06, energyHigh: 5.9, baseWaterMl: 0.06 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -235,7 +235,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "scoring-rubric", verb: "Creating", dropdownText: "a scoring rubric", dropdownLabel: "creating a scoring rubric", category: "Education",
+    id: "scoring-rubric", verb: "Drafting", dropdownText: "a scoring rubric", dropdownLabel: "creating a scoring rubric", category: "Education",
     clarifying: "Asking the AI to structure disorganized data into a markdown or HTML table.",
     baseEnergyWh: 0.005, energyLow: 0.005, energyHigh: 3.0, baseWaterMl: 0.005 * 3.45,
     confidence: "medium", tierSensitive: true,
@@ -255,7 +255,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "study-guide", verb: "Creating", dropdownText: "a student study guide", dropdownLabel: "a student study guide", category: "Education",
+    id: "study-guide", verb: "Creating", dropdownText: "a study guide", dropdownLabel: "a student study guide", category: "Education",
     clarifying: "Summarizing lecture notes or textbook chapters into flashcards or review points.",
     baseEnergyWh: 0.02, energyLow: 0.02, energyHigh: 7.5, baseWaterMl: 0.02 * 3.45,
     confidence: "medium", tierSensitive: true,
@@ -276,7 +276,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "long-chat", category: "Chat", verb: "Having", dropdownText: "a long AI conversation", dropdownLabel: "a long AI conversation",
+    id: "long-chat", category: "Chat", verb: "Having", dropdownText: "a long chat", dropdownLabel: "a long AI conversation",
     clarifying: "A 20–50 message back-and-forth session. At the Standard estimate (Google 2025), each message costs 0.24 Wh. At the Intensive estimate, 50 messages × 2.9 Wh = 145 Wh, which × 3.45 mL/Wh exactly matches Li et al.'s direct measurement of 500 mL for a ChatGPT conversation.",
     baseEnergyWh: 0.15, energyLow: 0.15, energyHigh: 145, baseWaterMl: 0.15 * 3.45,
     confidence: "medium", tierSensitive: true,
@@ -286,7 +286,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "coding", category: "Code", verb: "Getting", dropdownText: "100 AI code suggestions", dropdownLabel: "100 code suggestions",
+    id: "coding", category: "Code", verb: "Getting", dropdownText: "100 code prompts", dropdownLabel: "100 code suggestions",
     clarifying: "100 individual autocomplete or code completion suggestions — a realistic volume for a focused hour of AI-assisted development.",
     baseEnergyWh: 0.1, energyLow: 0.1, energyHigh: 29, baseWaterMl: 0.1 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -296,7 +296,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "app-build", category: "Code", verb: "Vibe coding", dropdownText: "a simple app", dropdownLabel: "a simple app",
+    id: "app-build", category: "Code", verb: "Building", dropdownText: "a simple app", dropdownLabel: "a simple app",
     clarifying: "A 1–2 hour session with many rounds of code generation, debugging, and iteration. Wide uncertainty — actual energy depends heavily on which AI model and how many requests.",
     baseEnergyWh: 50, energyLow: 50, energyHigh: 1000, baseWaterMl: 50 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -317,7 +317,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "training-llm", category: "Specialized", verb: "Training", dropdownText: "a large language model", dropdownLabel: "training a large language model",
+    id: "training-llm", category: "Specialized", verb: "Training", dropdownText: "an LLM", dropdownLabel: "training a large language model",
     clarifying: "Training GPT-3 (175B parameters) — one-time, not per use. Frontier models are estimated to need 10–100× more energy. No company has disclosed training costs.",
     baseEnergyWh: 1287000000, energyLow: 500000000, energyHigh: 5000000000, baseWaterMl: 700000000,
     confidence: "medium", tierSensitive: false,
@@ -333,17 +333,17 @@ const SCENARIOS: Scenario[] = [
   {
     id: "typical-daily", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical day", dropdownLabel: "a typical day of AI use",
     clarifying: "A realistic day: ~15 short chat messages, 2 AI email replies, 1 AI search, and 1 AI image. Based on moderate AI usage patterns (MIT Technology Review 2025 analysis of daily habits).",
-    baseEnergyWh: 0.045, energyLow: 0.045, energyHigh: 52.2, baseWaterMl: 0.045 * 3.45,
+    baseEnergyWh: 2.465, energyLow: 2.465, energyHigh: 60.6, baseWaterMl: 2.465 * 3.45,
     confidence: "low", tierSensitive: true,
     math: {
-      energy: { equation: "Energy = 15 × chat + 2 × email + 1 × AI search + 1 × image", sourceName: "Composite — Google Cloud 2025 · Luccioni 2023 · MIT Tech Review 2025", derivation: "Standard tier: (15 × 0.24) + (2 × 0.50) + (1 × 0.72) + (1 × 2.4) = 3.60 + 1.00 + 0.72 + 2.40 = 7.72 Wh. Light tier: ~0.045 Wh. Intensive tier: ~52.2 Wh." },
+      energy: { equation: "Energy = 15 × chat + 2 × email + 1 × AI search + 1 × image", sourceName: "Composite — Google Cloud 2025 · Luccioni 2023 · MIT Tech Review 2025", derivation: "Standard tier: (15 × 0.24) + (2 × 0.50) + (1 × 0.72) + (1 × 2.4) = 3.60 + 1.00 + 0.72 + 2.40 = 7.72 Wh. Light tier: ~2.47 Wh. Intensive tier: ~60.6 Wh." },
       water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023", derivation: "Standard energy × Typical WUE: 7.72 Wh × 3.45 mL/Wh ≈ 26.6 mL per day." },
     },
   },
   {
     id: "typical-weekly", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical week", dropdownLabel: "a typical week of AI use",
     clarifying: "A week of moderate use: ~100 chat messages, 10 email replies, 5 AI searches, 3 images, 1 long conversation, and 1 meeting-notes session. Represents a knowledge worker who uses AI tools regularly.",
-    baseEnergyWh: 0.39, energyLow: 0.39, energyHigh: 455, baseWaterMl: 0.39 * 3.45,
+    baseEnergyWh: 7.81, energyLow: 7.81, energyHigh: 521.6, baseWaterMl: 7.81 * 3.45,
     confidence: "low", tierSensitive: true,
     math: {
       energy: { equation: "Energy = 100 × chat + 10 × email + 5 × search + 3 × image + 1 × long chat + 1 × meeting notes", sourceName: "Composite — Google Cloud 2025 · Luccioni 2023 · MIT Tech Review 2025", derivation: "Standard: (100 × 0.24) + (10 × 0.50) + (5 × 0.72) + (3 × 2.4) + (1 × 12.0) + (1 × 1.70) = 24 + 5 + 3.6 + 7.2 + 12 + 1.7 = 53.5 Wh." },
@@ -353,7 +353,7 @@ const SCENARIOS: Scenario[] = [
   {
     id: "typical-monthly", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical month", dropdownLabel: "a typical month of AI use",
     clarifying: "A month of active use: ~400 chat messages, 40 email replies, 20 AI searches, 10 images, 4 long conversations, 4 meeting-notes sessions, 200 code suggestions, and 1 short AI video. A power-user knowledge worker.",
-    baseEnergyWh: 2.44, energyLow: 2.44, energyHigh: 2886, baseWaterMl: 2.44 * 3.45,
+    baseEnergyWh: 990.44, energyLow: 990.44, energyHigh: 8435.6, baseWaterMl: 990.44 * 3.45,
     confidence: "low", tierSensitive: true,
     math: {
       energy: { equation: "Energy = 400 × chat + 40 × email + 20 × search + 10 × image + 4 × long chat + 4 × meeting + 200 × code + 1 × video", sourceName: "Composite — Google Cloud 2025 · Luccioni 2023 · MIT Tech Review 2025", derivation: "Standard: (400 × 0.24) + (40 × 0.50) + (20 × 0.72) + (10 × 2.4) + (4 × 12) + (4 × 1.7) + (200 × 0.12) + (1 × 944) = 96 + 20 + 14.4 + 24 + 48 + 6.8 + 24 + 944 = 1,177 Wh." },
@@ -494,41 +494,40 @@ function getCompLabel(comparables: typeof ENERGY_COMPARABLES | typeof WATER_COMP
 }
 
 function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
-  // Very Deep Green (0 Wh) → Light Green (1 Wh) → Golden Yellow (500 Wh) → Burnt Orange (1000 Wh) → Deep Red (>1000 Wh)
-  if (wh >= 1000) return { r: 225, g: 50, b: 35 }; // Deep red-orange
-  if (wh <= 0)    return { r: 15,  g: 50, b: 35 }; // Dark forest green
+  // 0 Wh: Dark Green -> 10 Wh: Yellow -> 100 Wh: Orange -> 1000 Wh: Red -> 100,000 Wh: Dark Red
+  if (wh >= 100000) return { r: 124, g: 17, b: 3 }; // Dark Red (#7c1103)
+  if (wh >= 1000)   return { r: 210, g: 40, b: 30 }; // Red
+  if (wh <= 0)      return { r: 15,  g: 60, b: 45 }; // Dark forest green
 
-  const dkGreen = { r: 15,  g: 50,  b: 40  }; // Dark forest green
-  const ltGreen = { r: 210, g: 170, b: 20  }; // Amber gold (at 3 Wh)
-  const golden  = { r: 210, g: 140, b: 20  }; // Deeper amber
-  const burnt   = { r: 210, g: 90,  b: 25  }; // Warm orange
+  const dkGreen = { r: 15,  g: 60,  b: 45  }; 
+  const yellow  = { r: 215, g: 190, b: 35  }; 
+  const orange  = { r: 225, g: 110, b: 25  }; 
+  const red     = { r: 210, g: 40,  b: 30  }; 
 
-  // 0 → 3 Wh: very deep green → light yellow
-  if (wh <= 3) {
-    const t = wh / 3;
+  if (wh <= 10) {
+    const t = wh / 10;
     return {
-      r: Math.round(dkGreen.r + (ltGreen.r - dkGreen.r) * t),
-      g: Math.round(dkGreen.g + (ltGreen.g - dkGreen.g) * t),
-      b: Math.round(dkGreen.b + (ltGreen.b - dkGreen.b) * t),
+      r: Math.round(dkGreen.r + (yellow.r - dkGreen.r) * t),
+      g: Math.round(dkGreen.g + (yellow.g - dkGreen.g) * t),
+      b: Math.round(dkGreen.b + (yellow.b - dkGreen.b) * t),
     };
   }
-  // 3 → 500 Wh: light yellow → golden yellow
-  if (wh <= 500) {
-    const t = (wh - 3) / 497;
+  if (wh <= 100) {
+    const t = (wh - 10) / 90;
     return {
-      r: Math.round(ltGreen.r + (golden.r - ltGreen.r) * t),
-      g: Math.round(ltGreen.g + (golden.g - ltGreen.g) * t),
-      b: Math.round(ltGreen.b + (golden.b - ltGreen.b) * t),
+      r: Math.round(yellow.r + (orange.r - yellow.r) * t),
+      g: Math.round(yellow.g + (orange.g - yellow.g) * t),
+      b: Math.round(yellow.b + (orange.b - yellow.b) * t),
     };
   }
-  // 500 → 1000 Wh: golden yellow → burnt orange
-  const t = (wh - 500) / 500;
+  const t = Math.min(1, (wh - 100) / 900);
   return {
-    r: Math.round(golden.r + (burnt.r - golden.r) * t),
-    g: Math.round(golden.g + (burnt.g - golden.g) * t),
-    b: Math.round(golden.b + (burnt.b - golden.b) * t),
+    r: Math.round(orange.r + (red.r - orange.r) * t),
+    g: Math.round(orange.g + (red.g - orange.g) * t),
+    b: Math.round(orange.b + (red.b - orange.b) * t),
   };
 }
+
 
 // ─── COMPARABLE DROPDOWN ───────────────────────────────────────────────────
 function ComparableDropdown({ value, onChange, options }: { value: string; onChange: (id: string) => void; options: readonly { id: string; label: string }[] }) {
@@ -619,25 +618,26 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
 
                 {/* ── Average Compiled Usage at the top ── */}
                 <div>
-                  <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-1.5 px-1" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>Average Compiled Usage</div>
+                  <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-1.5 text-center w-full" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>Average Compiled Usage</div>
                   <div className="flex gap-2">
                     {SCENARIOS.filter(s => s.category === 'Typical Usage').map(s => {
                       const e = getEnergyWh(s.id, s.baseEnergyWh, 'commercial');
                       const rgb = getEnergyColorRgb(e);
                       const isSelected = s.id === value;
-                      const baseBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.25)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.12)`;
-                      const hoverBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.35)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.22)`;
-                      const baseBorder = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.7)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`;
-                      const hoverBorder = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.9)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.5)`;
+                      const baseBg = `rgba(${rgb.r},${rgb.g},${rgb.b},0.8)`;
+                      const isDark = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) < 140; 
+                      const textColor = isDark ? 'text-white' : 'text-gray-900';
                       const label = s.dropdownText.replace('a typical ', '').replace('a ', '');
                       const cap = label.charAt(0).toUpperCase() + label.slice(1);
                       return (
                         <button key={s.id} onClick={() => { onChange(s.id); setOpen(false); }}
-                          style={{ backgroundColor: baseBg, borderColor: baseBorder, fontFamily: "'Anthropic Sans', sans-serif" }}
-                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = hoverBg; e.currentTarget.style.borderColor = hoverBorder; }}
-                          onMouseLeave={e => { e.currentTarget.style.backgroundColor = baseBg; e.currentTarget.style.borderColor = baseBorder; }}
-                          className={`flex-1 text-center px-4 py-2 rounded-full text-[13px] border-2 transition-all ${isSelected ? 'font-bold shadow-md' : 'font-medium'} text-gray-800 dark:text-gray-200`}>
-                          {cap}
+                          style={{ 
+                            backgroundColor: baseBg, 
+                            boxShadow: `0 3px 10px rgba(${rgb.r},${rgb.g},${rgb.b},0.2)`,
+                            fontFamily: "'Anthropic Sans', sans-serif" 
+                          }}
+                          className={`flex-1 text-center px-4 rounded-xl text-[13px] h-10 flex items-center justify-center transition-all border-0 ${isSelected ? 'font-bold scale-[1.03] ring-1 ring-black/10' : 'font-medium filter brightness-105 hover:brightness-110 hover:scale-[1.01]'} ${textColor}`}>
+                          <span className="truncate whitespace-nowrap">{cap}</span>
                         </button>
                       );
                     })}
@@ -648,24 +648,25 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {Object.entries(scenariosByCategory).map(([category, items]) => (
                     <div key={category} className="flex flex-col gap-1.5 bg-gray-100/50 dark:bg-gray-900/50 rounded-2xl p-3 border border-gray-100 dark:border-gray-800">
-                      <div className="text-[10px] font-bold tracking-widest text-gray-500 uppercase px-1" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>{category}</div>
+                      <div className="text-[10px] font-bold tracking-widest text-gray-500 uppercase text-center w-full" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>{category}</div>
                       <div className="flex flex-col gap-1">
                         {items.filter(s => s.dropdownText.toLowerCase().includes(search.toLowerCase()) || s.verb.toLowerCase().includes(search.toLowerCase())).map(s => {
                           const e = getEnergyWh(s.id, s.baseEnergyWh, 'commercial');
                           const rgb = getEnergyColorRgb(e);
                           const isSelected = s.id === value;
-                          const baseBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.25)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.12)`;
-                          const hoverBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.35)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.22)`;
-                          const baseBorder = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.7)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`;
-                          const hoverBorder = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.9)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.5)`;
+                          const baseBg = `rgba(${rgb.r},${rgb.g},${rgb.b},0.8)`;
+                          const isDark = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) < 140;
+                          const textColor = isDark ? 'text-white' : 'text-gray-900';
                           return (
                             <button key={s.id} onClick={() => { onChange(s.id); setOpen(false); }}
                               title={`${s.verb} ${s.dropdownText}`}
-                              style={{ backgroundColor: baseBg, borderColor: baseBorder, fontFamily: "'Anthropic Sans', sans-serif" }}
-                              onMouseEnter={e => { e.currentTarget.style.backgroundColor = hoverBg; e.currentTarget.style.borderColor = hoverBorder; }}
-                              onMouseLeave={e => { e.currentTarget.style.backgroundColor = baseBg; e.currentTarget.style.borderColor = baseBorder; }}
-                              className={`text-left px-2.5 py-1.5 rounded-lg text-[12px] flex items-center min-h-[34px] border-2 text-gray-800 dark:text-gray-200 transition-all ${isSelected ? 'font-bold shadow-md' : 'font-medium'}`}>
-                              <span className="line-clamp-2 leading-tight">{s.verb} {s.dropdownText}</span>
+                              style={{ 
+                                backgroundColor: baseBg, 
+                                boxShadow: `0 3px 10px rgba(${rgb.r},${rgb.g},${rgb.b},0.2)`,
+                                fontFamily: "'Anthropic Sans', sans-serif" 
+                              }}
+                              className={`text-center px-2 rounded-xl text-[12px] flex items-center justify-center h-10 transition-all border-0 overflow-hidden ${isSelected ? 'font-bold scale-[1.03] ring-1 ring-black/10' : 'font-medium filter brightness-105 hover:brightness-110 hover:scale-[1.01]'} ${textColor}`}>
+                              <span className="truncate whitespace-nowrap w-full">{s.verb} {s.dropdownText}</span>
                             </button>
                           );
                         })}
@@ -685,17 +686,22 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                       <div className="flex w-full h-2 rounded-full overflow-hidden">
-                        <div className="w-[35%] h-full" style={{ background: 'linear-gradient(to right, rgb(15,50,40), rgb(210,170,20))' }} />
-                        <div className="w-[2px] bg-white/80 h-full shrink-0" />
-                        <div className="flex-1 h-full" style={{ background: 'linear-gradient(to right, rgb(210,170,20) 0%, rgb(210,140,20) 40%, rgb(210,90,25) 100%)' }} />
+                        {/* Segment 1: 0 -> 10 Wh (35% width) */}
+                        <div className="w-[35%] h-full" style={{ background: 'linear-gradient(to right, rgb(15,60,45), rgb(215,190,35))' }} />
+                        <div className="w-[1px] bg-white/40 h-full shrink-0" />
+                        {/* Segment 2: 10 -> 1000 Wh (Remaining width) */}
+                        <div className="flex-1 h-full" style={{ background: 'linear-gradient(to right, rgb(215,190,35) 0%, rgb(225,110,25) 10%, rgb(210,40,30) 100%)' }} />
                       </div>
-                      <div className="flex justify-between text-[8.5px] text-gray-400 px-0.5" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
-                        <span>0 Wh</span><span>3 Wh</span><span>1 kWh</span>
+
+                      <div className="relative w-full h-3 mt-0.5 text-[8.5px] text-gray-400" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+                        <span className="absolute left-0">0 Wh</span>
+                        <span className="absolute left-[35%] -translate-x-1/2">10 Wh</span>
+                        <span className="absolute right-0">1 kWh</span>
                       </div>
                     </div>
-                    {/* Separate >100 kWh outlier indicator */}
-                    <div className="flex flex-col items-center gap-0.5 shrink-0">
-                      <div className="w-3 h-3 rounded-full" style={{ background: 'rgb(210,40,30)' }} />
+                    {/* Separate >100 kWh outlier indicator - distinctly darker red */}
+                    <div className="flex flex-col items-center gap-0.5 shrink-0 ml-1">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#7c1103' }} />
                       <span className="text-[8px] text-gray-400 leading-none whitespace-nowrap" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>&gt;100 kWh</span>
                     </div>
                   </div>
@@ -853,7 +859,6 @@ function CustomCalculator({ counts, onChange, totalE, totalW, energyComp, setEne
               <span className="flex items-center gap-1.5 whitespace-nowrap">
                 <span className="font-medium text-gray-500 dark:text-gray-400">{equivWaterVal(totalW, waterComp)}</span>
                 <ComparableDropdown value={waterComp} onChange={setWaterComp} options={WATER_COMPARABLES} />
-                <span className="-ml-1">.</span>
               </span>
             </div>
           </>
@@ -918,7 +923,9 @@ function CompareModal({ selectedId, tier, wueTier, onClose }: { selectedId: stri
           </div>
 
           {rows.map(({ id, dropdownLabel, val, energy, water }, i) => {
-            const color = TASK_COLORS[id];
+            const rgb = getEnergyColorRgb(energy);
+            const color = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+
             const pct = maxVal > 0 ? (val / maxVal) * 100 : 0;
             const isSel = id === selectedId;
             const smallestVal = rows[0]?.val ?? 1;
@@ -1422,7 +1429,6 @@ export default function Home() {
                     <span className="flex items-center gap-1.5 whitespace-nowrap">
                       <span className="font-medium text-gray-500 dark:text-gray-400">{equivWaterVal(waterMl, waterComp)}</span>
                       <ComparableDropdown value={waterComp} onChange={setWaterComp} options={WATER_COMPARABLES} />
-                      <span className="-ml-1">.</span>
                     </span>
                   </div>
 
