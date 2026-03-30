@@ -175,7 +175,7 @@ function getWaterMl(id: string, baseWater: number, energyWh: number, baseEnergyW
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 interface MathBlock { equation: string; sourceName: string; derivation: string; tierSource?: Record<ModelTier, string>; }
 export interface Scenario {
-  id: string; verb: string; dropdownText: string; dropdownLabel: string; clarifying: string;
+  id: string; verb: string; dropdownText: string; dropdownLabel: string; buttonText: string; clarifying: string;
   baseEnergyWh: number; energyLow: number; energyHigh: number; baseWaterMl: number;
   confidence: "high" | "medium" | "low"; tierSensitive: boolean;
   math: { energy: MathBlock; water: MathBlock; note?: string };
@@ -185,7 +185,7 @@ export interface Scenario {
 // ─── SCENARIOS ───────────────────────────────────────────────────────────────
 const SCENARIOS: Scenario[] = [
   {
-    id: "short-chat", category: "Chat", verb: "Sending", dropdownText: "a chat message", dropdownLabel: "a short chat message",
+    id: "short-chat", category: "Chat", verb: "Sending", dropdownText: "a short chat message", dropdownLabel: "a short chat message", buttonText: "Chat message",
     clarifying: "One short message to an AI assistant. Low-impact individually, but billions happen daily. Google's comprehensive Aug 2025 measurement: 0.24 Wh and 0.26 mL per median Gemini prompt — select 'Standard' to see this figure.",
     baseEnergyWh: 0.003, energyLow: 0.003, energyHigh: 2.9, baseWaterMl: 0.003 * 3.45,
     confidence: "high", tierSensitive: true,
@@ -195,7 +195,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "email-reply", category: "Writing & Office", verb: "Drafting", dropdownText: "an email reply", dropdownLabel: "an AI email reply",
+    id: "email-reply", category: "Writing & Office", verb: "Drafting", dropdownText: "an AI email reply", dropdownLabel: "an AI email reply", buttonText: "Email reply",
     clarifying: "AI reads your email thread and drafts a reply — like Gmail Smart Reply, Copilot in Outlook, or asking an AI assistant to write a specific response. One of the lighter everyday AI tasks.",
     baseEnergyWh: 0.005, energyLow: 0.005, energyHigh: 3.0, baseWaterMl: 0.005 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -205,7 +205,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "ai-search", category: "Chat", verb: "Doing", dropdownText: "a web search", dropdownLabel: "an AI web search",
+    id: "ai-search", category: "Chat", verb: "Doing", dropdownText: "an AI web search", dropdownLabel: "an AI web search", buttonText: "Web search",
     clarifying: "One AI-powered search query — Perplexity, Google AI Overviews, or Bing Copilot. These make 3+ model passes: understanding your query, retrieving sources, and synthesizing an answer — which is why they use more than a single chat message.",
     baseEnergyWh: 0.01, energyLow: 0.01, energyHigh: 8.7, baseWaterMl: 0.01 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -215,7 +215,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "inbox-search", category: "Writing & Office", verb: "Searching", dropdownText: "your inbox", dropdownLabel: "inbox search and analysis",
+    id: "inbox-search", category: "Writing & Office", verb: "Searching", dropdownText: "your inbox with AI", dropdownLabel: "inbox search and analysis", buttonText: "Inbox search",
     clarifying: "AI searches through your email history, finds relevant threads, and surfaces insights or action items. More intensive than a single reply because it processes many messages — like asking Gmail AI to find all emails about a project and summarize what needs doing.",
     baseEnergyWh: 0.03, energyLow: 0.03, energyHigh: 5.0, baseWaterMl: 0.03 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -225,7 +225,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "meeting-notes", category: "Writing & Office", verb: "Taking", dropdownText: "meeting notes", dropdownLabel: "AI meeting notes",
+    id: "meeting-notes", category: "Writing & Office", verb: "Taking", dropdownText: "AI meeting notes (30 min)", dropdownLabel: "AI meeting notes", buttonText: "Meeting notes",
     clarifying: "30 minutes of real-time transcription plus an end-of-meeting summary. Combines continuous audio processing with one full generation call. Tools like Otter.ai, Fireflies.ai, or Microsoft Copilot for Teams.",
     baseEnergyWh: 0.06, energyLow: 0.06, energyHigh: 5.9, baseWaterMl: 0.06 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -235,7 +235,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "scoring-rubric", verb: "Drafting", dropdownText: "a scoring rubric", dropdownLabel: "creating a scoring rubric", category: "Education",
+    id: "scoring-rubric", verb: "Drafting", dropdownText: "a scoring rubric", dropdownLabel: "creating a scoring rubric", buttonText: "Scoring rubric", category: "Education",
     clarifying: "Asking the AI to structure disorganized data into a markdown or HTML table.",
     baseEnergyWh: 0.005, energyLow: 0.005, energyHigh: 3.0, baseWaterMl: 0.005 * 3.45,
     confidence: "medium", tierSensitive: true,
@@ -245,7 +245,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "lesson-plan", verb: "Generating", dropdownText: "a teacher's lesson plan", dropdownLabel: "a teacher's lesson plan", category: "Education",
+    id: "lesson-plan", verb: "Generating", dropdownText: "a teacher's lesson plan", dropdownLabel: "a teacher's lesson plan", buttonText: "Lesson plan", category: "Education",
     clarifying: "Taking a curriculum topic and creating a structured 45-minute lesson plan with activities.",
     baseEnergyWh: 0.015, energyLow: 0.015, energyHigh: 5.0, baseWaterMl: 0.015 * 3.45,
     confidence: "medium", tierSensitive: true,
@@ -255,7 +255,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "study-guide", verb: "Creating", dropdownText: "a study guide", dropdownLabel: "a student study guide", category: "Education",
+    id: "study-guide", verb: "Creating", dropdownText: "a student study guide", dropdownLabel: "a student study guide", buttonText: "Study guide", category: "Education",
     clarifying: "Summarizing lecture notes or textbook chapters into flashcards or review points.",
     baseEnergyWh: 0.02, energyLow: 0.02, energyHigh: 7.5, baseWaterMl: 0.02 * 3.45,
     confidence: "medium", tierSensitive: true,
@@ -265,7 +265,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "image", category: "Image & Video", verb: "Generating", dropdownText: "an AI image", dropdownLabel: "an AI image",
+    id: "image", category: "Image & Video", verb: "Generating", dropdownText: "an AI image", dropdownLabel: "an AI image", buttonText: "AI image",
     clarifying: "A single image from an AI model. This is the best-measured AI task — researchers directly instrumented real GPU hardware during generation.",
     baseEnergyWh: 2.4, energyLow: 0.5, energyHigh: 6.5, baseWaterMl: 2.4 * 1.2,
     confidence: "high", tierSensitive: false,
@@ -276,7 +276,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "long-chat", category: "Chat", verb: "Having", dropdownText: "a long chat", dropdownLabel: "a long AI conversation",
+    id: "long-chat", category: "Chat", verb: "Having", dropdownText: "a long AI conversation", dropdownLabel: "a long AI conversation", buttonText: "Long chat",
     clarifying: "A 20–50 message back-and-forth session. At the Standard estimate (Google 2025), each message costs 0.24 Wh. At the Intensive estimate, 50 messages × 2.9 Wh = 145 Wh, which × 3.45 mL/Wh exactly matches Li et al.'s direct measurement of 500 mL for a ChatGPT conversation.",
     baseEnergyWh: 0.15, energyLow: 0.15, energyHigh: 145, baseWaterMl: 0.15 * 3.45,
     confidence: "medium", tierSensitive: true,
@@ -286,7 +286,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "coding", category: "Code", verb: "Getting", dropdownText: "100 code prompts", dropdownLabel: "100 code suggestions",
+    id: "coding", category: "Code", verb: "Getting", dropdownText: "100 AI code suggestions", dropdownLabel: "100 code suggestions", buttonText: "100 code prompts",
     clarifying: "100 individual autocomplete or code completion suggestions — a realistic volume for a focused hour of AI-assisted development.",
     baseEnergyWh: 0.1, energyLow: 0.1, energyHigh: 29, baseWaterMl: 0.1 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -296,7 +296,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "app-build", category: "Code", verb: "Building", dropdownText: "a simple app", dropdownLabel: "a simple app",
+    id: "app-build", category: "Code", verb: "Building", dropdownText: "a simple app", dropdownLabel: "a simple app", buttonText: "App building",
     clarifying: "A 1–2 hour session with many rounds of code generation, debugging, and iteration. Wide uncertainty — actual energy depends heavily on which AI model and how many requests.",
     baseEnergyWh: 50, energyLow: 50, energyHigh: 1000, baseWaterMl: 50 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -306,7 +306,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "video", category: "Image & Video", verb: "Generating", dropdownText: "a short AI video", dropdownLabel: "a short AI video",
+    id: "video", category: "Image & Video", verb: "Generating", dropdownText: "a short AI video", dropdownLabel: "a short AI video", buttonText: "Short video",
     clarifying: "A 5–15 second AI video clip. Being ~400× more energy-intensive than a single image is expected: a 10-second video requires generating ~240 frames, each comparable to an image generation pass.",
     baseEnergyWh: 944, energyLow: 200, energyHigh: 2500, baseWaterMl: 944 * 1.2,
     confidence: "low", tierSensitive: false,
@@ -317,7 +317,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "training-llm", category: "Specialized", verb: "Training", dropdownText: "an LLM", dropdownLabel: "training a large language model",
+    id: "training-llm", category: "Specialized", verb: "Training", dropdownText: "a large language model", dropdownLabel: "training a large language model", buttonText: "Training an LLM",
     clarifying: "Training GPT-3 (175B parameters) — one-time, not per use. Frontier models are estimated to need 10–100× more energy. No company has disclosed training costs.",
     baseEnergyWh: 1287000000, energyLow: 500000000, energyHigh: 5000000000, baseWaterMl: 700000000,
     confidence: "medium", tierSensitive: false,
@@ -331,7 +331,7 @@ const SCENARIOS: Scenario[] = [
   // Composite scenarios representing realistic accumulated AI use.
   // Energy = sum of component tasks at Standard tier (Google Cloud 2025 Aug, 0.24 Wh base)
   {
-    id: "typical-daily", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical day", dropdownLabel: "a typical day of AI use",
+    id: "typical-daily", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical day", dropdownLabel: "a typical day of AI use", buttonText: "Daily AI use",
     clarifying: "A realistic day: ~15 short chat messages, 2 AI email replies, 1 AI search, and 1 AI image. Based on moderate AI usage patterns (MIT Technology Review 2025 analysis of daily habits).",
     baseEnergyWh: 2.465, energyLow: 2.465, energyHigh: 60.6, baseWaterMl: 2.465 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -341,7 +341,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "typical-weekly", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical week", dropdownLabel: "a typical week of AI use",
+    id: "typical-weekly", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical week", dropdownLabel: "a typical week of AI use", buttonText: "Weekly AI use",
     clarifying: "A week of moderate use: ~100 chat messages, 10 email replies, 5 AI searches, 3 images, 1 long conversation, and 1 meeting-notes session. Represents a knowledge worker who uses AI tools regularly.",
     baseEnergyWh: 7.81, energyLow: 7.81, energyHigh: 521.6, baseWaterMl: 7.81 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -351,7 +351,7 @@ const SCENARIOS: Scenario[] = [
     },
   },
   {
-    id: "typical-monthly", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical month", dropdownLabel: "a typical month of AI use",
+    id: "typical-monthly", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical month", dropdownLabel: "a typical month of AI use", buttonText: "Monthly AI use",
     clarifying: "A month of active use: ~400 chat messages, 40 email replies, 20 AI searches, 10 images, 4 long conversations, 4 meeting-notes sessions, 200 code suggestions, and 1 short AI video. A power-user knowledge worker.",
     baseEnergyWh: 990.44, energyLow: 990.44, energyHigh: 8435.6, baseWaterMl: 990.44 * 3.45,
     confidence: "low", tierSensitive: true,
@@ -627,8 +627,6 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                       const baseBg = `rgba(${rgb.r},${rgb.g},${rgb.b},0.8)`;
                       const isDark = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) < 140; 
                       const textColor = isDark ? 'text-white' : 'text-gray-900';
-                      const label = s.dropdownText.replace('a typical ', '').replace('a ', '');
-                      const cap = label.charAt(0).toUpperCase() + label.slice(1);
                       return (
                         <button key={s.id} onClick={() => { onChange(s.id); setOpen(false); }}
                           style={{ 
@@ -637,7 +635,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                             fontFamily: "'Anthropic Sans', sans-serif" 
                           }}
                           className={`flex-1 text-center px-4 rounded-xl text-[13px] h-10 flex items-center justify-center transition-all border-0 ${isSelected ? 'font-bold scale-[1.03] ring-1 ring-black/10' : 'font-medium filter brightness-105 hover:brightness-110 hover:scale-[1.01]'} ${textColor}`}>
-                          <span className="truncate whitespace-nowrap">{cap}</span>
+                          <span className="truncate whitespace-nowrap">{s.buttonText}</span>
                         </button>
                       );
                     })}
@@ -666,7 +664,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                                 fontFamily: "'Anthropic Sans', sans-serif" 
                               }}
                               className={`text-center px-2 rounded-xl text-[12px] flex items-center justify-center h-10 transition-all border-0 overflow-hidden ${isSelected ? 'font-bold scale-[1.03] ring-1 ring-black/10' : 'font-medium filter brightness-105 hover:brightness-110 hover:scale-[1.01]'} ${textColor}`}>
-                              <span className="truncate whitespace-nowrap w-full">{s.verb} {s.dropdownText}</span>
+                              <span className="truncate whitespace-nowrap w-full">{s.buttonText}</span>
                             </button>
                           );
                         })}
