@@ -1,11 +1,11 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { X, ExternalLink, BarChart2, Leaf, BookOpen, Coffee, ChevronRight, ChevronLeft, Info, Moon, Sun, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid, ReferenceLine } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSources } from "@/hooks/use-sources";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "next-themes";
-
+import { SlideHoverIcon, OffsetsPanel, MethodologyPanel, SupportModal } from "./InlineSections";
 // ─── ENERGY ESTIMATE TIERS ───────────────────────────────────────────────────
 // Three separate published estimates — chosen independently of water location.
 // "Light"     = Luccioni et al. 2023: direct GPU measurement on small open-source models
@@ -174,7 +174,7 @@ function getWaterMl(id: string, baseWater: number, energyWh: number, baseEnergyW
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 interface MathBlock { equation: string; sourceName: string; derivation: string; tierSource?: Record<ModelTier, string>; }
-interface Scenario {
+export interface Scenario {
   id: string; verb: string; dropdownText: string; dropdownLabel: string; clarifying: string;
   baseEnergyWh: number; energyLow: number; energyHigh: number; baseWaterMl: number;
   confidence: "high" | "medium" | "low"; tierSensitive: boolean;
@@ -374,7 +374,7 @@ const CUSTOM_TASKS = [
 ];
 
 // ─── ACTION TIPS ──────────────────────────────────────────────────────────────
-const ACTION_TIPS = [
+export const ACTION_TIPS = [
   { impact: "Very high", color: "#c0392b", title: "Skip AI video generation unless essential", body: "One 10-second AI video uses as much energy as ~3,900 chat messages (at Google's measured rate). Describe your idea in words first. If you must generate, generate once — don't regenerate." },
   { impact: "High",      color: "#e67e22", title: "Think before generating AI images",        body: "One AI image uses ~10× more energy than a chat message. Ask: can I describe this in words instead? Reserve image generation for when visuals are truly necessary." },
   { impact: "High",      color: "#e67e22", title: "Get your prompt right the first time",     body: "Every 'try again' or 'make it shorter' is a full new request at the same cost. Spend 30 seconds being specific before submitting. One good prompt beats five mediocre ones." },
@@ -387,20 +387,20 @@ const ACTION_TIPS = [
 ];
 
 // ─── ENERGY / WATER OFFSETS ───────────────────────────────────────────────────
-const ENERGY_OFFSETS = [
+export const ENERGY_OFFSETS = [
   { id: "light",   label: "Turn off a 10W LED bulb",         unitLabel: "hours",   whPerUnit: 10   },
   { id: "ac",      label: "Skip 1 hour of air conditioning", unitLabel: "hours",   whPerUnit: 3500 },
   { id: "laundry", label: "Air-dry laundry (skip dryer)",     unitLabel: "loads",   whPerUnit: 2400 },
   { id: "walk",    label: "Walk instead of drive",            unitLabel: "km",      whPerUnit: 200  },
   { id: "laptop",  label: "Turn off a laptop",                unitLabel: "hours",   whPerUnit: 45   },
 ];
-const WATER_OFFSETS = [
+export const WATER_OFFSETS = [
   { id: "shower", label: "Take a shorter shower",              unitLabel: "min shorter", mlPerUnit: 8000  },
   { id: "flush",  label: "Skip a toilet flush",                unitLabel: "flushes",     mlPerUnit: 9000  },
   { id: "dishes", label: "Dishwasher instead of hand-washing", unitLabel: "loads",       mlPerUnit: 50000 },
   { id: "tap",    label: "Turn off tap while brushing teeth",  unitLabel: "times",       mlPerUnit: 2000  },
 ];
-const TRUSTED_LINKS = [
+export const TRUSTED_LINKS = [
   { name: "Arcadia",        url: "https://arcadia.com",             desc: "Switch home energy to clean sources" },
   { name: "Wren",           url: "https://www.wren.co",            desc: "Monthly carbon offset subscription"   },
   { name: "EPA WaterSense", url: "https://www.epa.gov/watersense", desc: "Water efficiency programs"            },
@@ -459,7 +459,7 @@ function fmtWater(ml: number): string {
   if (ml < 1) return `< 1 mL`;
   return `${Math.round(ml)} mL`;
 }
-function fmtOffset(v: number, u: string) {
+export function fmtOffset(v: number, u: string) {
   if (v < 0.01) return `< 0.01 ${u}`;
   if (v < 100) return `${(Math.round(v * 10) / 10).toLocaleString()} ${u}`;
   return `${Math.round(v).toLocaleString()} ${u}`;
@@ -805,63 +805,7 @@ function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTie
   );
 }
 
-// ─── MATH MODAL ───────────────────────────────────────────────────────────────
-function MathModal({ scenario, tier, wueTier, energyWh, waterMl, onClose }: {
-  scenario: Scenario; tier: ModelTier; wueTier: WueTier; energyWh: number; waterMl: number; onClose: () => void;
-}) {
-  const tierSrc = scenario.math.energy.tierSource?.[tier];
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
-      <motion.div className="absolute inset-0 bg-black/20 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={onClose} />
-      <motion.div className="relative bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-lg max-h-[88vh] overflow-y-auto z-10"
-        initial={{ scale: 0.96, opacity: 0, y: 8 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", damping: 28, stiffness: 400 }}>
-        <div className="px-7 pt-7 pb-7 flex flex-col gap-5">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-0.5">Show me the math</p>
-              <h2 className="text-base font-semibold text-black">{scenario.verb} {scenario.dropdownText}</h2>
-              <p className="text-[11px] text-gray-400 mt-0.5 italic">{TIER_META[tier].rangeLabel} energy · {WUE_META[wueTier].label} water · {TIER_META[tier].source} / {WUE_META[wueTier].source}</p>
-            </div>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100"><X size={14} className="text-gray-400" /></button>
-          </div>
-          {scenario.tierSensitive && (
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-xs text-gray-700 leading-relaxed">
-              Energy varies by estimate range. Currently: <strong>{TIER_META[tier].rangeLabel}</strong> ({TIER_META[tier].source}). Change using the selectors on the main screen.
-            </div>
-          )}
-          <div className="rounded-xl border border-gray-200 overflow-hidden">
-            <div className="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
-              <p className="text-xs font-semibold text-black">⚡ Energy: {fmtEnergy(energyWh)}</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${scenario.confidence === "high" ? "bg-green-50 text-green-700 border-green-200" : scenario.confidence === "medium" ? "bg-yellow-50 text-yellow-700 border-yellow-200" : "bg-gray-100 text-gray-500 border-gray-200"}`}>{scenario.confidence} confidence</span>
-            </div>
-            <div className="px-5 py-4 flex flex-col gap-3">
-              <div className="bg-gray-900 rounded-lg px-4 py-2.5"><p className="text-xs text-gray-100 font-mono leading-relaxed">{scenario.math.energy.equation}</p></div>
-              <div><p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">Source</p><p className="text-xs text-black font-medium">{scenario.math.energy.sourceName}</p></div>
-              <div><p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">Derivation</p><p className="text-xs text-gray-600 leading-relaxed">{tierSrc ?? scenario.math.energy.derivation}</p></div>
-            </div>
-          </div>
-          <div className="rounded-xl border border-gray-200 overflow-hidden">
-            <div className="bg-gray-50 px-5 py-3 border-b border-gray-200 flex items-center justify-between">
-              <p className="text-xs font-semibold text-black">💧 Water: {fmtWater(waterMl)}</p>
-              <span className="text-[10px] px-2 py-0.5 rounded-full border font-medium bg-gray-100 text-gray-700 border-gray-200">{WUE_META[wueTier].label} DC · {WUE_VALUES[wueTier]} mL/Wh</span>
-            </div>
-            <div className="px-5 py-4 flex flex-col gap-3">
-              <div className="bg-gray-900 rounded-lg px-4 py-2.5"><p className="text-xs text-gray-100 font-mono leading-relaxed">{scenario.id === "training-llm" ? scenario.math.water.equation : `${fmtEnergy(energyWh)} × ${WUE_VALUES[wueTier]} mL/Wh = ${fmtWater(waterMl)}`}</p></div>
-              <div><p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">Water source</p><p className="text-xs text-black font-medium">{scenario.math.water.sourceName}</p></div>
-              <div><p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">Derivation</p><p className="text-xs text-gray-600 leading-relaxed">{scenario.math.water.derivation}</p></div>
-            </div>
-          </div>
-          {scenario.math.note && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
-              <p className="text-[10px] text-amber-700 uppercase tracking-widest font-medium mb-1">Note</p>
-              <p className="text-xs text-amber-800 leading-relaxed">{scenario.math.note}</p>
-            </div>
-          )}
-        </div>
-      </motion.div>
-    </div>
-  );
-}
+
 
 // ─── CUSTOM CALCULATOR ────────────────────────────────────────────────────────
 function CustomCalculator({ counts, onChange, totalE, totalW, energyComp, setEnergyComp, waterComp, setWaterComp }: {
@@ -916,7 +860,7 @@ function CustomCalculator({ counts, onChange, totalE, totalW, energyComp, setEne
 }
 
 // ─── COMPARE PANEL (LIGHT MODAL) ───────────────────────────────────────────────
-function CompareModal({ selectedId, tier, wueTier, multiplier, onClose }: { selectedId: string; tier: ModelTier; wueTier: WueTier; multiplier: number; onClose: () => void }) {
+function CompareModal({ selectedId, tier, wueTier, onClose }: { selectedId: string; tier: ModelTier; wueTier: WueTier; onClose: () => void }) {
   const [optionId, setOptionId] = useState("netflix");
   const [showTraining, setShowTraining] = useState(false);
   const [showVideo, setShowVideo] = useState(true);
@@ -924,35 +868,21 @@ function CompareModal({ selectedId, tier, wueTier, multiplier, onClose }: { sele
   const option = COMPARE_OPTIONS.find(o => o.id === optionId)!;
   const wue = WUE_VALUES[wueTier];
 
-  const compareIds = new Set(["short-chat", "long-chat", "app-build", "email-reply", "meeting-notes", "video", "image-1", selectedId]);
   const rows = SCENARIOS
-    .filter(s => compareIds.has(s.id))
+    .filter(s => (showTraining || s.id !== "training-llm") && (showVideo || s.id !== "video"))
     .map(s => {
       const e = getEnergyWh(s.id, s.baseEnergyWh, tier);
-      const w = getWaterMl(s.id, s.baseWaterMl, e, s.baseEnergyWh, wue, tier);
-      return { ...s, val: option.compute(e, w), energy: e, water: w, color: TASK_COLORS[s.id] };
+          const w = getWaterMl(s.id, s.baseWaterMl, e, s.baseEnergyWh, wue, tier);
+      return { ...s, val: option.compute(e, w), energy: e, water: w };
     })
     .sort((a, b) => a.val - b.val);
 
-  const selectedTaskScore = rows.find(r => r.id === selectedId)?.val;
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-lg text-xs font-medium z-50 relative pointer-events-none">
-          <p className="text-gray-900 mb-1 font-semibold">{data.dropdownLabel}</p>
-          <p className="text-gray-600">{option.format(data.val)}</p>
-        </div>
-      );
-    }
-    return null;
-  };
+  const maxVal = Math.max(...rows.map(r => r.val), 0.001);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8">
       <motion.div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} onClick={onClose} />
-      <motion.div className="relative bg-white rounded-3xl border border-gray-100 shadow-2xl w-full max-w-4xl max-h-[88vh] flex flex-col z-10 overflow-hidden"
+      <motion.div className="relative bg-white rounded-3xl border border-gray-100 shadow-2xl w-full max-w-3xl max-h-[88vh] flex flex-col z-10 overflow-hidden"
         initial={{ scale: 0.96, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", damping: 28, stiffness: 400 }}>
         
         <button onClick={onClose} className="absolute top-5 right-5 p-2 rounded-full hover:bg-gray-100 z-20 transition-colors">
@@ -979,53 +909,55 @@ function CompareModal({ selectedId, tier, wueTier, multiplier, onClose }: { sele
         </div>
 
         <div className="flex-1 px-8 py-6 flex flex-col gap-4 overflow-y-auto bg-gray-50/50">
-          <div className="text-sm text-gray-500 mb-1 px-2">
+          <div className="text-sm text-gray-500 mb-2">
             Comparison measured in <strong>{option.unit.toLowerCase()}</strong>
           </div>
 
-          <div className="w-full h-[550px] shrink-0 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm relative z-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart layout="vertical" data={rows} margin={{ top: 30, right: 30, left: 10, bottom: 20 }} barCategoryGap="25%">
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
-                <XAxis type="number" tick={{ fontSize: 12, fill: '#6B7280' }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="dropdownLabel" type="category" width={180} interval={0} tick={{ fontSize: 13, fill: '#4B5563', fontWeight: 600 }} axisLine={false} tickLine={false} />
-                <RechartsTooltip cursor={{ fill: 'rgba(0,0,0,0.04)' }} content={<CustomTooltip />} />
-                {selectedTaskScore && (
-                  <ReferenceLine 
-                    x={selectedTaskScore} 
-                    stroke="#1F2937" 
-                    strokeWidth={2} 
-                    strokeDasharray="3 3" 
-                    opacity={0.6}
-                    label={{ 
-                      value: `Selected: ×${multiplier}`, 
-                      position: 'top', 
-                      fill: '#4B5563', 
-                      fontSize: 12, 
-                      fontWeight: 600,
-                      offset: 10
-                    }} 
-                  />
-                )}
-                <Bar dataKey="val" radius={[0, 4, 4, 0]} maxBarSize={32} isAnimationActive={true} animationDuration={600}>
-                  {rows.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.id === selectedId ? "#1F2937" : (entry.color || "#9CA3AF")} opacity={entry.id === selectedId ? 1 : 0.6} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {rows.map(({ id, dropdownLabel, val, energy, water }, i) => {
+            const color = TASK_COLORS[id];
+            const pct = maxVal > 0 ? (val / maxVal) * 100 : 0;
+            const isSel = id === selectedId;
+            const smallestVal = rows[0]?.val ?? 1;
+            const relToSmallest = smallestVal > 0 ? val / smallestVal : 1;
 
-          <div className="mt-4 p-5 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col gap-3 shrink-0">
+            return (
+              <motion.div key={id}
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.04, duration: 0.3 }}
+                className={`rounded-2xl p-4 transition-all bg-white border ${isSel ? "border-blue-200 shadow-sm ring-1 ring-blue-50" : "border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200"}`}>
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="w-3 h-3 rounded-full shrink-0 shadow-sm" style={{ background: color }} />
+                  <span className={`text-sm flex-1 ${isSel ? "text-gray-900 font-semibold" : "text-gray-700 font-medium"}`}>
+                    {dropdownLabel}
+                    {isSel && <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] bg-blue-50 text-blue-600 font-medium">Current</span>}
+                  </span>
+                  {relToSmallest > 1.5 && i > 0 && (
+                    <span className="text-xs text-gray-400 font-mono shrink-0 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100 tracking-tight">×{Math.round(relToSmallest)}</span>
+                  )}
+                  <span className={`text-base font-semibold tabular-nums shrink-0 ${isSel ? "text-gray-900" : "text-gray-700"}`}>
+                    {option.format(val)}
+                  </span>
+                </div>
+                <div className="relative h-4 rounded-full overflow-hidden bg-gray-100 shadow-inner">
+                  <motion.div className="absolute left-0 top-0 h-full rounded-full"
+                    style={{ background: color, opacity: isSel ? 1 : 0.85 }}
+                    initial={{ width: "0%" }} animate={{ width: `${Math.max(pct, 0.5)}%` }}
+                    transition={{ delay: i * 0.04 + 0.15, duration: 0.55, ease: "easeOut" }} />
+                </div>
+              </motion.div>
+            );
+          })}
+
+          <div className="mt-6 p-5 rounded-2xl bg-white border border-gray-100 shadow-sm flex flex-col gap-3">
             <p className="text-sm font-semibold text-gray-900 tracking-tight">Heavy-duty specialized tasks</p>
             <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showVideo} onChange={e => setShowVideo(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900" />
+              <input type="checkbox" checked={showVideo} onChange={e => setShowVideo(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               <span className="text-sm text-gray-600 group-hover:text-gray-900 leading-relaxed transition-colors">
                 <strong className="text-gray-900 font-medium">Video Generation</strong> — A short 10-second clip requires rendering hundreds of frames. It takes about {Math.round(944/0.24)}× more power than a simple text prompt.
               </span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer group">
-              <input type="checkbox" checked={showTraining} onChange={e => setShowTraining(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900" />
+              <input type="checkbox" checked={showTraining} onChange={e => setShowTraining(e.target.checked)} className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               <span className="text-sm text-gray-600 group-hover:text-gray-900 leading-relaxed transition-colors">
                 <strong className="text-gray-900 font-medium">Training an AI model</strong> — Building the brain before anyone uses it. This massive operation occurs once but consumes millions of times more resources than daily usage.
               </span>
@@ -1037,11 +969,12 @@ function CompareModal({ selectedId, tier, wueTier, multiplier, onClose }: { sele
   );
 }
 
+
 // ─── ACTION MODAL ────────────────────────────────────────────────────────────
 function ActionModal({ scenario, energyWh, waterMl, onClose }: { scenario: Scenario | null; energyWh: number; waterMl: number; onClose: () => void }) {
   const [eOff, setEOff] = useState(ENERGY_OFFSETS[0].id);
   const [wOff, setWOff] = useState(WATER_OFFSETS[0].id);
-  const [tab, setTab] = useState<"habits" | "offset">("offset");
+  const [tab, setTab] = useState<"habits" | "offset">("habits");
   const ea = ENERGY_OFFSETS.find(a => a.id === eOff)!;
   const wa = WATER_OFFSETS.find(a => a.id === wOff)!;
 
@@ -1063,11 +996,11 @@ function ActionModal({ scenario, energyWh, waterMl, onClose }: { scenario: Scena
             </div>
           </div>
           <div className="flex gap-2 mt-4 bg-gray-100/50 rounded-full p-1 border border-gray-100">
-            <button onClick={() => setTab("offset")} className={`flex-1 text-sm py-2 rounded-full font-medium transition-all shadow-sm ${tab === "offset" ? "bg-white text-gray-900 border border-gray-200" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50 border border-transparent"}`}>
-              Offset My Impact
-            </button>
             <button onClick={() => setTab("habits")} className={`flex-1 text-sm py-2 rounded-full font-medium transition-all shadow-sm ${tab === "habits" ? "bg-white text-gray-900 border border-gray-200" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50 border border-transparent"}`}>
               Simple Habits
+            </button>
+            <button onClick={() => setTab("offset")} className={`flex-1 text-sm py-2 rounded-full font-medium transition-all shadow-sm ${tab === "offset" ? "bg-white text-gray-900 border border-gray-200" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50 border border-transparent"}`}>
+              Offset My Impact
             </button>
           </div>
         </div>
@@ -1289,6 +1222,64 @@ function GetInvolvedModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+// ─── MATH MODAL ───────────────────────────────────────────────────────────────
+function MathModal({ scenario, tier, wueTier, energyWh, waterMl, onClose }: {
+  scenario: Scenario; tier: ModelTier; wueTier: WueTier; energyWh: number; waterMl: number; onClose: () => void;
+}) {
+  const tierSrc = scenario.math.energy.tierSource?.[tier];
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 md:p-8">
+      <motion.div className="absolute inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
+      <motion.div className="relative bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-2xl w-full max-w-lg max-h-[88vh] overflow-y-auto z-10"
+        initial={{ scale: 0.96, opacity: 0, y: 8 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.96, opacity: 0, y: 8 }} transition={{ type: "spring", damping: 28, stiffness: 400 }}>
+        <div className="px-7 pt-7 pb-7 flex flex-col gap-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-0.5">Show me the math</p>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{scenario.verb} {scenario.dropdownText}</h2>
+              <p className="text-[11px] text-gray-400 mt-0.5 italic">{TIER_META[tier].rangeLabel} energy · {WUE_META[wueTier].label} water · {TIER_META[tier].source} / {WUE_META[wueTier].source}</p>
+            </div>
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"><X size={14} className="text-gray-400" /></button>
+          </div>
+          {scenario.tierSensitive && (
+            <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-4 py-3 text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
+              Energy varies by estimate range. Currently: <strong>{TIER_META[tier].rangeLabel}</strong> ({TIER_META[tier].source}). Change using the selectors on the main screen.
+            </div>
+          )}
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-gray-50 dark:bg-gray-800 px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">⚡ Energy: {fmtEnergy(energyWh)}</p>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${scenario.confidence === "high" ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" : scenario.confidence === "medium" ? "bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800" : "bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"}`}>{scenario.confidence} confidence</span>
+            </div>
+            <div className="px-5 py-4 flex flex-col gap-3">
+              <div className="bg-gray-900 dark:bg-black rounded-lg px-4 py-2.5"><p className="text-xs text-gray-100 font-mono leading-relaxed">{scenario.math.energy.equation}</p></div>
+              <div><p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">Source</p><p className="text-xs text-gray-900 dark:text-gray-100 font-medium">{scenario.math.energy.sourceName}</p></div>
+              <div><p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">Derivation</p><p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{tierSrc ?? scenario.math.energy.derivation}</p></div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="bg-gray-50 dark:bg-gray-800 px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">💧 Water: {fmtWater(waterMl)}</p>
+              <span className="text-[10px] px-2 py-0.5 rounded-full border font-medium bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">{WUE_META[wueTier].label} DC · {WUE_VALUES[wueTier]} mL/Wh</span>
+            </div>
+            <div className="px-5 py-4 flex flex-col gap-3">
+              <div className="bg-gray-900 dark:bg-black rounded-lg px-4 py-2.5"><p className="text-xs text-gray-100 font-mono leading-relaxed">{scenario.id === "training-llm" ? scenario.math.water.equation : `${fmtEnergy(energyWh)} × ${WUE_VALUES[wueTier]} mL/Wh = ${fmtWater(waterMl)}`}</p></div>
+              <div><p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">Water source</p><p className="text-xs text-gray-900 dark:text-gray-100 font-medium">{scenario.math.water.sourceName}</p></div>
+              <div><p className="text-[10px] text-gray-400 uppercase tracking-widest font-medium mb-1">Derivation</p><p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{scenario.math.water.derivation}</p></div>
+            </div>
+          </div>
+          {scenario.math.note && (
+            <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-5 py-4">
+              <p className="text-[10px] text-amber-700 dark:text-amber-500 uppercase tracking-widest font-medium mb-1">Note</p>
+              <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">{scenario.math.note}</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function Home() {
   const [selectedId, setSelectedId] = useState("short-chat");
@@ -1296,11 +1287,10 @@ export default function Home() {
   const [wueTier, setWueTier] = useState<WueTier>("average");
   const { theme, setTheme } = useTheme();
   const [showMath, setShowMath] = useState(false);
-  const [showSources, setShowSources] = useState(false);
-  const [showAction, setShowAction] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
-  const [showGetInvolved, setShowGetInvolved] = useState(false);
-  const [showFinePrint, setShowFinePrint] = useState(false);
+  const [activePanel, setActivePanel] = useState<'methodology' | 'offsets' | null>(null);
+  const [showSupport, setShowSupport] = useState(false);
+  const isMd = typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches;
   const [multiplier, setMultiplier] = useState(1);
   const [energyComp, setEnergyComp] = useState("netflix");
   const [waterComp, setWaterComp] = useState("handwash");
@@ -1346,76 +1336,27 @@ export default function Home() {
   const energyWh = baseTaskEnergy * userMult * reasoningMult;
   const waterMl  = baseTaskWater  * userMult * reasoningMult;
 
+  const panelOpen = activePanel !== null;
+
   return (
-    <div className="h-screen bg-white dark:bg-[#0a0a0a] flex flex-col overflow-hidden transition-colors duration-500 text-gray-900 dark:text-gray-100" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+    <div className="md:h-screen bg-white dark:bg-[#0a0a0a] flex flex-col md:flex-row md:overflow-hidden transition-colors duration-500 text-gray-900 dark:text-gray-100" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
 
-      {/* Top Right Theme Toggle */}
-      <div className="fixed top-5 right-5 sm:top-6 sm:right-6 z-50">
-        <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="flex items-center justify-center bg-gray-100/80 dark:bg-gray-800/80 backdrop-blur-md text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 w-10 h-10 sm:w-11 sm:h-11 rounded-full shadow-sm hover:shadow-md transition-all active:scale-95 border border-gray-200/50 dark:border-gray-700/50"
-          title="Toggle Dark Mode">
-          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-        </button>
-      </div>
-
-      {/* Bottom Right FABs — icon slides left, text revealed to the right */}
-      <div className="fixed bottom-6 right-6 z-40 hidden md:flex flex-col items-end gap-3">
-        {/* Action FAB (Top) — Leaf icon */}
-        <button onClick={() => setShowAction(true)}
-          className="group bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
-          style={{ width: 52, transition: 'width 0.35s cubic-bezier(0.25,1,0.5,1), box-shadow 0.3s' }}
-          onMouseEnter={e => { e.currentTarget.style.width = '200px'; }}
-          onMouseLeave={e => { e.currentTarget.style.width = '52px'; }}
-          title="How to fix this">
-          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
-            <Leaf size={20} />
-          </div>
-          <span className="whitespace-nowrap font-medium text-sm text-gray-400 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 pr-5 transition-colors">
-            Offset My Impact
-          </span>
-        </button>
-
-        {/* Sources FAB (Middle) — BookOpen icon */}
-        <button onClick={() => setShowSources(true)}
-          className="group bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
-          style={{ width: 52, transition: 'width 0.35s cubic-bezier(0.25,1,0.5,1), box-shadow 0.3s' }}
-          onMouseEnter={e => { e.currentTarget.style.width = '200px'; }}
-          onMouseLeave={e => { e.currentTarget.style.width = '52px'; }}
-          title="Methodology">
-          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
-            <BookOpen size={20} />
-          </div>
-          <span className="whitespace-nowrap font-medium text-sm text-gray-400 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 pr-5 transition-colors">
-            Sources & Data
-          </span>
-        </button>
-
-        {/* Coffee FAB (Bottom) — Coffee icon */}
-        <button onClick={() => setShowGetInvolved(true)}
-          className="group bg-white dark:bg-gray-800 overflow-hidden rounded-full shadow-lg border border-gray-100/50 dark:border-gray-700/50 hover:shadow-xl active:scale-95 flex items-center h-[52px] cursor-pointer"
-          style={{ width: 52, transition: 'width 0.35s cubic-bezier(0.25,1,0.5,1), box-shadow 0.3s' }}
-          onMouseEnter={e => { e.currentTarget.style.width = '200px'; }}
-          onMouseLeave={e => { e.currentTarget.style.width = '52px'; }}
-          title="Get Involved">
-          <div className="min-w-[52px] min-h-[52px] flex items-center justify-center shrink-0 rounded-full text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
-            <Coffee size={20} />
-          </div>
-          <span className="whitespace-nowrap font-medium text-sm text-gray-400 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100 pr-5 transition-colors">
-            Feedback & Coffee
-          </span>
-        </button>
-      </div>
-
-      {/* Scrollable center — centers when content fits, scrolls on small screens */}
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="flex items-center justify-center min-h-full relative px-4 sm:px-8 md:px-16 py-5">
+      {/* ─── LEFT COLUMN: primary calculator ─── */}
+      <motion.div
+        className="flex flex-col md:h-full md:overflow-y-auto min-h-0 shrink-0"
+        animate={{ width: isMd && panelOpen ? '35%' : '100%' }}
+        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+        style={{ minWidth: 0 }}
+      >
+        <div className={`flex flex-col justify-center items-center min-h-screen md:min-h-full relative px-4 sm:px-8 py-12 md:py-0 ${isMd && panelOpen ? 'md:pl-8 lg:pl-12 md:items-start' : 'md:px-16'}`}>
           <AnimatePresence mode="wait">
             <motion.div key={selectedId + tier + wueTier}
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="flex flex-col items-center gap-3 md:gap-5 w-full max-w-4xl">
+              className={`flex flex-col items-center gap-3 md:gap-5 w-full ${isMd && panelOpen ? 'max-w-xl' : 'max-w-4xl'} ${panelOpen ? 'cursor-pointer' : ''}`}
+              onClick={panelOpen ? () => setActivePanel(null) : undefined}>
               
-              <div className="flex flex-col items-center gap-3 text-[1.15rem] sm:text-[1.35rem] md:text-[1.65rem] leading-[1.5] text-black dark:text-gray-100 text-center"
+              <div className={`flex flex-col items-center gap-3 ${isMd && panelOpen ? 'text-[1rem] sm:text-[1.1rem] md:text-[1.25rem] leading-[1.4]' : 'text-[1.15rem] sm:text-[1.35rem] md:text-[1.65rem] leading-[1.5]'} text-black dark:text-gray-100 text-center`}
                 style={{ fontFamily: "'Anthropic Serif', serif" }}>
                 
                 <div className="flex flex-col items-center gap-2">
@@ -1467,9 +1408,8 @@ export default function Home() {
                 </div>
               ) : scenario ? (
                 <>
-
-                  {/* Secondary: equivalency — comparable words ARE the dropdowns */}
-                  <div className="text-[0.9rem] min-[400px]:text-[1.05rem] sm:text-[1.15rem] md:text-[1.25rem] leading-[1.6] text-gray-500 dark:text-gray-400 text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-2 sm:px-4"
+                  {/* Secondary: equivalency */}
+                  <div className={`${isMd && panelOpen ? 'text-[0.8rem] sm:text-[0.95rem]' : 'text-[0.9rem] min-[400px]:text-[1.05rem] sm:text-[1.15rem] md:text-[1.25rem]'} leading-[1.6] text-gray-500 dark:text-gray-400 text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-2 sm:px-4`}
                     style={{ fontFamily: "'Anthropic Serif', serif" }}>
                     <span>That's</span>
                     <span className="font-medium text-gray-500 dark:text-gray-400">{equivEnergyVal(energyWh, energyComp)}</span>
@@ -1492,32 +1432,44 @@ export default function Home() {
                     />
                   </div>
 
-                  {/* Fine print */}
-                  <div className="flex flex-col items-center gap-1.5 max-w-lg mt-2 px-4">
-                    <button 
-                      onClick={() => setShowFinePrint(!showFinePrint)}
-                      className="text-[11px] md:text-xs text-gray-400 dark:text-gray-500 font-medium hover:text-gray-600 dark:hover:text-gray-300 transition-colors flex items-center gap-1"
-                    >
-                      Show disclaimers & methodology {showFinePrint ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
+                  {/* Hover icons: Book + Leaf — below selectors */}
+                  <div className="flex items-center gap-4 mt-3">
+                    <SlideHoverIcon
+                      icon={<BookOpen size={18} />}
+                      label="Methodology & Sources"
+                      active={activePanel === 'methodology'}
+                      onClick={() => setActivePanel(activePanel === 'methodology' ? null : 'methodology')}
+                    />
+                    <SlideHoverIcon
+                      icon={<Leaf size={18} />}
+                      label="Offset My Impact"
+                      active={activePanel === 'offsets'}
+                      onClick={() => setActivePanel(activePanel === 'offsets' ? null : 'offsets')}
+                    />
+                  </div>
 
-                    <AnimatePresence>
-                      {showFinePrint && (
+                  {/* Mobile-only: panel content rendered below */}
+                  <div className="md:hidden w-full mt-4">
+                    <AnimatePresence mode="wait">
+                      {activePanel && (
                         <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden flex flex-col items-center gap-1.5 pt-2"
+                          key={activePanel}
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3, ease: 'easeOut' }}
+                          className="overflow-hidden"
                         >
-                          <p className="text-xs md:text-sm text-gray-400 dark:text-gray-500 font-light leading-relaxed text-center italic">
-                            {scenario.clarifying}{" "}
-                            <button onClick={() => setShowMath(true)} className="underline underline-offset-2 hover:text-black dark:hover:text-white transition-colors not-italic font-medium">
-                              Wait, how did we get these numbers? →
+                          <div className="bg-gray-50/50 dark:bg-[#0d0d0d] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 mb-4">
+                            <button
+                              onClick={() => setActivePanel(null)}
+                              className="text-xs font-medium text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-4 flex items-center gap-1 transition-colors"
+                            >
+                              <ChevronLeft size={14} /> Close
                             </button>
-                          </p>
-                          <p className="text-[10px] md:text-xs text-gray-400/80 dark:text-gray-500/80 font-light text-center leading-relaxed mt-2" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
-                            Note: These calculations measure operational energy. They do not include 'embodied carbon'—the significant environmental cost of manufacturing and disposing of AI hardware.
-                          </p>
+                            {activePanel === 'methodology' && <MethodologyPanel scenario={scenario} tier={tier} wueTier={wueTier} energyWh={energyWh} waterMl={waterMl} onShowMath={() => { setActivePanel(null); setShowMath(true); }} />}
+                            {activePanel === 'offsets' && <OffsetsPanel energyWh={energyWh} waterMl={waterMl} />}
+                          </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -1526,43 +1478,59 @@ export default function Home() {
               ) : null}
             </motion.div>
           </AnimatePresence>
-
         </div>
+      </motion.div>
+
+      {/* ─── RIGHT COLUMN: panel content (2/3) ─── */}
+      <AnimatePresence>
+        {panelOpen && (
+          <motion.div
+            key={activePanel}
+            className="h-full border-l border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#0d0d0d] overflow-y-auto hidden md:block"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: '65%', opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+          >
+            <div className="p-6 md:p-10 lg:p-12">
+              <button
+                onClick={() => setActivePanel(null)}
+                className="text-xs font-medium text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-6 flex items-center gap-1 transition-colors"
+              >
+                <ChevronLeft size={14} /> Close panel
+              </button>
+              {activePanel === 'methodology' && <MethodologyPanel scenario={scenario} tier={tier} wueTier={wueTier} energyWh={energyWh} waterMl={waterMl} onShowMath={() => { setActivePanel(null); setShowMath(true); }} />}
+              {activePanel === 'offsets' && <OffsetsPanel energyWh={energyWh} waterMl={waterMl} />}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── BOTTOM RIGHT: Coffee & Theme toggles ─── */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+        <SlideHoverIcon
+          icon={theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          label="Toggle Theme"
+          direction="left"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        />
+        <SlideHoverIcon
+          icon={<Coffee size={16} />}
+          label="Feedback & Coffee"
+          direction="left"
+          onClick={() => setShowSupport(true)}
+        />
       </div>
 
-      {/* Original Coffee FAB has been moved to the bottom right FAB group. */}
-
-      <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md px-4 py-2.5 rounded-full shadow-xl border border-gray-100 dark:border-gray-800 w-[95%] max-w-[340px] justify-between">
-        <button onClick={() => setShowSources(true)} className="flex flex-col items-center gap-1.5 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 active:text-black dark:active:text-white flex-1 transition-colors">
-          <BookOpen size={18} />
-          <span className="text-[10px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">Sources</span>
-        </button>
-        <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 shrink-0" />
-        <button onClick={() => setShowAction(true)} className="flex flex-col items-center gap-1.5 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 active:text-black dark:active:text-white flex-1 transition-colors">
-          <Leaf size={18} />
-          <span className="text-[10px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">Action</span>
-        </button>
-        <div className="w-px h-8 bg-gray-200 dark:bg-gray-700 shrink-0" />
-        <button onClick={() => setShowGetInvolved(true)} className="flex flex-col items-center gap-1.5 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 active:text-black dark:active:text-white flex-1 transition-colors">
-          <Coffee size={18} />
-          <span className="text-[10px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">Coffee</span>
-        </button>
-      </div>
-
+      {/* ─── MODALS ─── */}
       <AnimatePresence>
         {showMath && scenario && <MathModal scenario={scenario} tier={tier} wueTier={wueTier} energyWh={energyWh} waterMl={waterMl} onClose={() => setShowMath(false)} />}
       </AnimatePresence>
       <AnimatePresence>
-        {showSources && <SourcesModal onClose={() => setShowSources(false)} />}
+        {showCompare && <CompareModal selectedId={selectedId} tier={tier} wueTier={wueTier} onClose={() => setShowCompare(false)} />}
       </AnimatePresence>
       <AnimatePresence>
-        {showAction && <ActionModal scenario={scenario} energyWh={energyWh} waterMl={waterMl} onClose={() => setShowAction(false)} />}
-      </AnimatePresence>
-      <AnimatePresence>
-        {showCompare && <CompareModal selectedId={selectedId} tier={tier} wueTier={wueTier} multiplier={multiplier} onClose={() => setShowCompare(false)} />}
-      </AnimatePresence>
-      <AnimatePresence>
-        {showGetInvolved && <GetInvolvedModal onClose={() => setShowGetInvolved(false)} />}
+        {showSupport && <SupportModal onClose={() => setShowSupport(false)} />}
       </AnimatePresence>
     </div>
   );
