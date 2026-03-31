@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ExternalLink, Coffee, BookOpen, Leaf, Moon, Sun } from "lucide-react";
+import { ExternalLink, Coffee, BookOpen, Leaf, Palette } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSources } from "@/hooks/use-sources";
 import { ACTION_TIPS, ENERGY_OFFSETS, WATER_OFFSETS, fmtOffset } from "./Home";
@@ -16,6 +16,7 @@ export function SlideHoverIcon({
   active = false,
   direction = "right",
   className = "",
+  isColorMode = false,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -23,6 +24,7 @@ export function SlideHoverIcon({
   active?: boolean;
   direction?: "right" | "left";
   className?: string;
+  isColorMode?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const show = hovered || active;
@@ -33,7 +35,7 @@ export function SlideHoverIcon({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={`flex items-center cursor-pointer transition-colors duration-200 ${
-        show ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500"
+        show ? (isColorMode ? "text-black" : "text-gray-900") : (isColorMode ? "text-black/60" : "text-gray-500")
       } ${direction === "left" ? "flex-row-reverse" : "flex-row"} ${className}`}
       style={{ gap: 0 }}
     >
@@ -58,7 +60,7 @@ export function SlideHoverIcon({
 }
 
 /* ─── OFFSETS PANEL (right 2/3) ─────────────────────────────────────────────── */
-export function OffsetsPanel({ energyWh, waterMl }: { energyWh: number; waterMl: number }) {
+export function OffsetsPanel({ energyWh, waterMl, isColorMode }: { energyWh: number; waterMl: number; isColorMode: boolean }) {
   const [eOff, setEOff] = useState(ENERGY_OFFSETS[0].id);
   const [wOff, setWOff] = useState(WATER_OFFSETS[0].id);
 
@@ -68,42 +70,42 @@ export function OffsetsPanel({ energyWh, waterMl }: { energyWh: number; waterMl:
   return (
     <div className="flex flex-col gap-8 h-full overflow-y-auto pr-2">
       <div>
-        <h2 className="text-xl font-bold mb-1 text-gray-900 dark:text-gray-100">Offset My Impact</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">Practical equivalences to balance the energy and water from this AI task.</p>
+        <h2 className={`text-xl font-bold mb-1 ${isColorMode ? "text-black" : "text-gray-900"}`}>Offset My Impact</h2>
+        <p className={`text-xs ${isColorMode ? "text-black/80 font-medium" : "text-gray-500"} mb-6 leading-relaxed`}>Practical equivalences to balance the energy and water from this AI task.</p>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-            <p className="text-xs font-semibold mb-3 text-gray-500 uppercase tracking-wider">⚡ Energy offset</p>
+          <div className="bg-white/70 border border-black/5 rounded-2xl p-5 shadow-sm">
+            <p className={`text-xs font-semibold mb-3 ${isColorMode ? "text-black/60" : "text-gray-500"} uppercase tracking-wider`}>⚡ Energy offset</p>
             <select value={eOff} onChange={e => setEOff(e.target.value)}
-              className="w-full text-sm rounded-xl px-3 py-2.5 mb-3 outline-none cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+              className={`w-full text-sm rounded-xl px-3 py-2.5 mb-3 outline-none cursor-pointer ${isColorMode ? "bg-white/40 border-black/10" : "bg-white/50 border-black/5"}`}>
               {ENERGY_OFFSETS.map((a: any) => <option key={a.id} value={a.id}>{a.label}</option>)}
             </select>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{fmtOffset(energyWh / ea.whPerUnit, ea.unitLabel)}</p>
+            <p className={`text-2xl font-bold ${isColorMode ? "text-black" : "text-gray-900"}`}>{fmtOffset(energyWh / ea.whPerUnit, ea.unitLabel)}</p>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
-            <p className="text-xs font-semibold mb-3 text-gray-500 uppercase tracking-wider">💧 Water offset</p>
+          <div className="bg-white/70 border border-black/5 rounded-2xl p-5 shadow-sm">
+            <p className={`text-xs font-semibold mb-3 ${isColorMode ? "text-black/60" : "text-gray-500"} uppercase tracking-wider`}>💧 Water offset</p>
             <select value={wOff} onChange={e => setWOff(e.target.value)}
-              className="w-full text-sm rounded-xl px-3 py-2.5 mb-3 outline-none cursor-pointer bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+              className={`w-full text-sm rounded-xl px-3 py-2.5 mb-3 outline-none cursor-pointer ${isColorMode ? "bg-white/40 border-black/10" : "bg-white/50 border-black/5"}`}>
               {WATER_OFFSETS.map((a: any) => <option key={a.id} value={a.id}>{a.label}</option>)}
             </select>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{fmtOffset(waterMl / wa.mlPerUnit, wa.unitLabel)}</p>
+            <p className={`text-2xl font-bold ${isColorMode ? "text-black" : "text-gray-900"}`}>{fmtOffset(waterMl / wa.mlPerUnit, wa.unitLabel)}</p>
           </div>
         </div>
       </div>
 
       {/* Habits — visually separated */}
-      <div className="border-t border-gray-200 dark:border-gray-800 pt-6">
-        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">General Habits</h3>
-        <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-4 italic">These are independent suggestions — not directly tied to the numbers above.</p>
+      <div className="border-t border-black/10 pt-6">
+        <h3 className={`text-xs font-bold ${isColorMode ? "text-black" : "text-gray-400"} uppercase tracking-widest mb-1`}>General Habits</h3>
+        <p className={`text-[10px] ${isColorMode ? "text-black/60 font-medium" : "text-gray-400"} mb-4 italic`}>These are independent suggestions — not directly tied to the numbers above.</p>
         <div className="grid gap-3 sm:grid-cols-2">
           {ACTION_TIPS.map((tip: any, i: number) => (
-            <div key={i} className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4">
+            <div key={i} className="bg-white/80 border border-black/5 rounded-xl p-4 shadow-sm">
               <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full mb-2 inline-block tracking-widest uppercase"
                 style={{ border: `1px solid ${tip.color}30`, color: tip.color, background: tip.color + '10' }}>
                 {tip.impact}
               </span>
-              <h4 className="font-semibold text-xs mb-1 text-gray-800 dark:text-gray-200">{tip.title}</h4>
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">{tip.body}</p>
+              <h4 className={`font-semibold text-xs mb-1 ${isColorMode ? "text-black" : "text-gray-800"}`}>{tip.title}</h4>
+              <p className={`text-[10px] ${isColorMode ? "text-black/80 font-medium" : "text-gray-500"} leading-relaxed`}>{tip.body}</p>
             </div>
           ))}
         </div>
@@ -113,8 +115,8 @@ export function OffsetsPanel({ energyWh, waterMl }: { energyWh: number; waterMl:
 }
 
 /* ─── METHODOLOGY PANEL (right 2/3) ────────────────────────────────────────── */
-export function MethodologyPanel({ scenario, tier, wueTier, energyWh, waterMl, onShowMath }: {
-  scenario?: any; tier?: string; wueTier?: string; energyWh?: number; waterMl?: number; onShowMath?: () => void;
+export function MethodologyPanel({ scenario, tier, wueTier, energyWh, waterMl, onShowMath, isColorMode }: {
+  scenario?: any; tier?: string; wueTier?: string; energyWh?: number; waterMl?: number; onShowMath?: () => void; isColorMode: boolean;
 }) {
   const { data: sources, isLoading } = useSources();
   const tierSrc = scenario?.math?.energy?.tierSource?.[tier as string];
@@ -126,64 +128,64 @@ export function MethodologyPanel({ scenario, tier, wueTier, energyWh, waterMl, o
       {scenario && (
         <div className="flex flex-col gap-4">
           <div>
-            <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest font-medium mb-1">This task</p>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{scenario.verb} {scenario.dropdownText}</h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{scenario.clarifying}</p>
+            <p className={`text-[10px] ${isColorMode ? "text-black" : "text-gray-400"} uppercase tracking-widest font-medium mb-1`}>This task</p>
+            <h2 className={`text-xl font-bold ${isColorMode ? "text-black" : "text-gray-900"}`}>{scenario.verb} {scenario.dropdownText}</h2>
+            <p className={`text-xs ${isColorMode ? "text-black/80 font-medium" : "text-gray-500"} mt-1 leading-relaxed`}>{scenario.clarifying}</p>
           </div>
 
           {/* Energy equation */}
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">⚡ Energy: {energyWh !== undefined ? (energyWh < 1 ? `${(energyWh * 1000).toFixed(0)} mWh` : energyWh >= 1000 ? `${(energyWh / 1000).toFixed(1)} kWh` : `${energyWh.toFixed(2)} Wh`) : '—'}</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${scenario.confidence === 'high' ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800' : scenario.confidence === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800' : 'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'}`}>{scenario.confidence} confidence</span>
+          <div className="rounded-xl border border-black/5 overflow-hidden shadow-sm">
+            <div className="bg-white/60 px-4 py-2.5 border-b border-black/5 flex items-center justify-between">
+              <p className={`text-xs font-semibold ${isColorMode ? "text-black" : "text-gray-800"}`}>⚡ Energy: {energyWh !== undefined ? (energyWh < 1 ? `${(energyWh * 1000).toFixed(0)} mWh` : energyWh >= 1000 ? `${(energyWh / 1000).toFixed(1)} kWh` : `${energyWh.toFixed(2)} Wh`) : '—'}</p>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${scenario.confidence === 'high' ? 'bg-green-50 text-green-700 border-green-200' : scenario.confidence === 'medium' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 'bg-gray-100 text-gray-500 border-gray-200'}`}>{scenario.confidence} confidence</span>
             </div>
-            <div className="px-4 py-3 flex flex-col gap-2">
-              <div className="bg-gray-900 dark:bg-black rounded-lg px-3 py-2"><p className="text-xs text-gray-100 font-mono leading-relaxed">{scenario.math?.energy?.equation}</p></div>
-              <p className="text-[11px] text-gray-600 dark:text-gray-400 leading-relaxed">{tierSrc ?? scenario.math?.energy?.derivation}</p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">Source: {scenario.math?.energy?.sourceName}</p>
+            <div className={`px-4 py-3 flex flex-col gap-2 ${isColorMode ? "bg-white/30" : "bg-white/40"}`}>
+              <div className="bg-gray-900 rounded-lg px-3 py-2"><p className="text-xs text-gray-100 font-mono leading-relaxed">{scenario.math?.energy?.equation}</p></div>
+              <p className={`text-[11px] ${isColorMode ? "text-black/80 font-medium" : "text-gray-600"} leading-relaxed`}>{tierSrc ?? scenario.math?.energy?.derivation}</p>
+              <p className={`text-[10px] ${isColorMode ? "text-black/60" : "text-gray-400"}`}>Source: {scenario.math?.energy?.sourceName}</p>
             </div>
           </div>
 
           {/* Water equation */}
-          <div className="rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2.5 border-b border-gray-200 dark:border-gray-700">
-              <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">💧 Water — depends on data center location</p>
+          <div className="rounded-xl border border-black/5 overflow-hidden shadow-sm">
+            <div className="bg-white/60 px-4 py-2.5 border-b border-black/5">
+              <p className={`text-xs font-semibold ${isColorMode ? "text-black" : "text-gray-800"}`}>💧 Water — depends on data center location</p>
             </div>
-            <div className="px-4 py-3 flex flex-col gap-2">
-              <div className="bg-gray-900 dark:bg-black rounded-lg px-3 py-2"><p className="text-xs text-gray-100 font-mono leading-relaxed">Energy × WUE (mL/Wh) = Water used</p></div>
-              <p className="text-[11px] text-gray-600 dark:text-gray-400 leading-relaxed">{scenario.math?.water?.derivation}</p>
-              <p className="text-[10px] text-gray-400 dark:text-gray-500">Source: {scenario.math?.water?.sourceName}</p>
+            <div className={`px-4 py-3 flex flex-col gap-2 ${isColorMode ? "bg-white/30" : "bg-white/40"}`}>
+              <div className="bg-gray-900 rounded-lg px-3 py-2"><p className="text-xs text-gray-100 font-mono leading-relaxed">Energy × WUE (mL/Wh) = Water used</p></div>
+              <p className={`text-[11px] ${isColorMode ? "text-black/80 font-medium" : "text-gray-600"} leading-relaxed`}>{scenario.math?.water?.derivation}</p>
+              <p className={`text-[10px] ${isColorMode ? "text-black/60" : "text-gray-400"}`}>Source: {scenario.math?.water?.sourceName}</p>
             </div>
           </div>
 
           {scenario.math?.note && (
-            <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 px-4 py-3">
-              <p className="text-[10px] text-amber-700 dark:text-amber-500 uppercase tracking-widest font-medium mb-1">Note</p>
-              <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">{scenario.math.note}</p>
+            <div className={`rounded-xl border ${isColorMode ? "border-black/5 bg-white/40" : "border-amber-200 bg-amber-50"} dark:border-amber-800 dark:bg-amber-900/20 px-4 py-3 shadow-sm`}>
+              <p className={`text-[10px] ${isColorMode ? "text-black" : "text-amber-700"} uppercase tracking-widest font-medium mb-1`}>Note</p>
+              <p className={`text-xs ${isColorMode ? "text-black/80 font-medium" : "text-amber-800"} leading-relaxed`}>{scenario.math.note}</p>
             </div>
           )}
         </div>
       )}
 
       {/* ── General methodology ── */}
-      <div className="border-t border-gray-100 dark:border-gray-800 pt-6 flex flex-col gap-4">
+      <div className="border-t border-black/10 pt-6 flex flex-col gap-4">
         <div>
-          <h3 className="text-xs font-bold mb-1 text-gray-400 uppercase tracking-widest">How estimates work</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Energy and water are controlled separately. Energy depends on the AI model and infrastructure. Water depends on where the data center is and what cooling it uses.</p>
+          <h3 className={`text-xs font-bold mb-1 ${isColorMode ? "text-black" : "text-gray-400"} uppercase tracking-widest`}>How estimates work</h3>
+          <p className={`text-xs ${isColorMode ? "text-black/80 font-medium" : "text-gray-500"} leading-relaxed`}>Energy and water are controlled separately. Energy depends on the AI model and infrastructure. Water depends on where the data center is and what cooling it uses.</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-3">
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-3 rounded-xl">
-            <strong className="text-xs block mb-2 text-gray-700 dark:text-gray-300">Energy estimate ranges</strong>
-            <ul className="space-y-1.5 text-[11px] leading-relaxed text-gray-600 dark:text-gray-400">
+          <div className={`bg-white/60 border border-black/5 p-3 rounded-xl shadow-sm`}>
+            <strong className={`text-xs block mb-2 ${isColorMode ? "text-black" : "text-gray-700"}`}>Energy estimate ranges</strong>
+            <ul className={`space-y-1.5 text-[11px] leading-relaxed ${isColorMode ? "text-black/80 font-medium" : "text-gray-600"}`}>
               <li><strong>Light:</strong> Direct GPU measurement (Luccioni 2023)</li>
               <li><strong>Standard:</strong> Full-stack Gemini measurement incl. cooling (Google Cloud Aug 2025)</li>
               <li><strong>Intensive:</strong> Estimated for ChatGPT-class on Azure (EPRI 2024)</li>
             </ul>
           </div>
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-3 rounded-xl">
-            <strong className="text-xs block mb-2 text-gray-700 dark:text-gray-300">Water Use Effectiveness (WUE)</strong>
-            <ul className="space-y-1.5 text-[11px] leading-relaxed text-gray-600 dark:text-gray-400">
+          <div className={`bg-white/60 border border-black/5 p-3 rounded-xl shadow-sm`}>
+            <strong className={`text-xs block mb-2 ${isColorMode ? "text-black" : "text-gray-700"}`}>Water Use Effectiveness (WUE)</strong>
+            <ul className={`space-y-1.5 text-[11px] leading-relaxed ${isColorMode ? "text-black/80 font-medium" : "text-gray-600"}`}>
               <li><strong>Efficient (1.1 mL/Wh):</strong> Google TPU, cool climate</li>
               <li><strong>Typical (3.45 mL/Wh):</strong> Azure avg US (Li et al. 2023)</li>
               <li><strong>Intensive (6.0 mL/Wh):</strong> Hot-climate evaporative (IEA 2024)</li>
@@ -194,19 +196,19 @@ export function MethodologyPanel({ scenario, tier, wueTier, energyWh, waterMl, o
 
       {/* ── Sources ── */}
       <div>
-        <h3 className="text-xs font-bold mb-3 text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-800 pb-2">Primary Literature</h3>
+        <h3 className={`text-xs font-bold mb-3 ${isColorMode ? "text-black" : "text-gray-400"} uppercase tracking-widest border-b border-black/5 pb-2`}>Primary Literature</h3>
         <div className="grid gap-2">
-          {isLoading && <p className="text-xs italic text-gray-500">Loading sources…</p>}
+          {isLoading && <p className={`text-xs italic ${isColorMode ? "text-black/80 font-medium" : "text-gray-500"}`}>Loading sources…</p>}
           {((sources || []) as any[]).map((s: any) => (
-            <div key={s.id} className="border border-gray-100 dark:border-gray-800 rounded-xl p-3 bg-gray-50/50 dark:bg-gray-900/50">
+            <div key={s.id} className={`border border-black/5 rounded-xl p-3 ${isColorMode ? "bg-white/40" : "bg-gray-50/50"}`}>
               <div className="flex items-start justify-between gap-3 mb-1">
                 <div>
-                  <p className="font-medium text-xs text-gray-900 dark:text-gray-100 leading-snug">{s.title}</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">{Array.isArray(s.authors) ? s.authors.join(', ') : s.authors} · {s.year}</p>
+                  <p className={`font-medium text-xs ${isColorMode ? "text-black" : "text-gray-900"} leading-snug`}>{s.title}</p>
+                  <p className={`text-[10px] ${isColorMode ? "text-black/60 font-medium" : "text-gray-500"} mt-0.5`}>{Array.isArray(s.authors) ? s.authors.join(', ') : s.authors} · {s.year}</p>
                 </div>
-                <a href={s.url} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-500 shrink-0 p-1"><ExternalLink size={13} /></a>
+                <a href={s.url} target="_blank" rel="noopener noreferrer" className={`${isColorMode ? "text-black/40 hover:text-black" : "text-gray-400 hover:text-blue-500"} shrink-0 p-1`}><ExternalLink size={13} /></a>
               </div>
-              {s.keyFindings && <p className="text-[10px] text-gray-600 dark:text-gray-400 leading-relaxed border-t border-gray-100 dark:border-gray-800 pt-1.5 mt-1.5">{s.keyFindings}</p>}
+              {s.keyFindings && <p className={`text-[10px] ${isColorMode ? "text-black/80 font-medium" : "text-gray-600"} leading-relaxed border-t border-black/5 pt-1.5 mt-1.5`}>{s.keyFindings}</p>}
             </div>
           ))}
         </div>
@@ -214,7 +216,7 @@ export function MethodologyPanel({ scenario, tier, wueTier, energyWh, waterMl, o
 
       {/* ── Gaps ── */}
       <div className="pb-6">
-        <h3 className="text-xs font-bold mb-3 text-gray-400 uppercase tracking-widest">What we don't know yet</h3>
+        <h3 className={`text-xs font-bold mb-3 ${isColorMode ? "text-black" : "text-gray-400"} uppercase tracking-widest`}>What we don't know yet</h3>
         <div className="grid gap-2 sm:grid-cols-2">
           {[
             { title: 'Only Google has published per-prompt measurements', body: 'ChatGPT, Claude, and Midjourney have not disclosed per-query figures.' },
@@ -222,9 +224,9 @@ export function MethodologyPanel({ scenario, tier, wueTier, energyWh, waterMl, o
             { title: 'Video generation is unverified', body: 'No peer-reviewed study has measured energy for commercial video AI.' },
             { title: 'Hardware lifecycle excluded', body: 'All estimates cover operational energy only — not manufacturing or disposal.' },
           ].map((g, i) => (
-            <div key={i} className="bg-gray-50 dark:bg-gray-800/40 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
-              <p className="font-semibold text-[11px] mb-1 text-gray-800 dark:text-gray-200">{g.title}</p>
-              <p className="text-[10px] leading-relaxed text-gray-600 dark:text-gray-400">{g.body}</p>
+            <div key={i} className={`p-3 rounded-xl border border-black/5 ${isColorMode ? "bg-white/40" : "bg-gray-50"}`}>
+              <p className={`font-semibold text-[11px] mb-1 ${isColorMode ? "text-black" : "text-gray-800"}`}>{g.title}</p>
+              <p className={`text-[10px] leading-relaxed ${isColorMode ? "text-black/80 font-medium" : "text-gray-600"}`}>{g.body}</p>
             </div>
           ))}
         </div>

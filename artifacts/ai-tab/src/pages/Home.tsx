@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
-import { X, ExternalLink, BarChart2, Leaf, BookOpen, Coffee, ChevronRight, ChevronLeft, Info, Moon, Sun, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { X, ExternalLink, BarChart2, Leaf, BookOpen, Coffee, ChevronRight, ChevronLeft, Info, Moon, Sun, Check, ChevronDown, ChevronUp, Palette } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid, ReferenceLine } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSources } from "@/hooks/use-sources";
 import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "next-themes";
 import { SlideHoverIcon, OffsetsPanel, MethodologyPanel, SupportModal } from "./InlineSections";
 // ─── ENERGY ESTIMATE TIERS ───────────────────────────────────────────────────
 // Three separate published estimates — chosen independently of water location.
@@ -540,17 +539,17 @@ function getEnergyColorRgb(wh: number): { r: number, g: number, b: number } {
 
 
 // ─── COMPARABLE DROPDOWN ───────────────────────────────────────────────────
-function ComparableDropdown({ value, onChange, options }: { value: string; onChange: (id: string) => void; options: readonly { id: string; label: string }[] }) {
+function ComparableDropdown({ value, onChange, options, isColorMode }: { value: string; onChange: (id: string) => void; options: readonly { id: string; label: string }[]; isColorMode: boolean }) {
   const [open, setOpen] = useState(false);
   const selected = options.find(o => o.id === value) ?? options[0];
 
   return (
     <span className="relative inline-flex items-center">
       <button onClick={() => setOpen(v => !v)}
-        className="cursor-pointer inline-flex items-center gap-1.5 transition-all outline-none text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+        className={`cursor-pointer inline-flex items-center gap-1.5 transition-all outline-none ${isColorMode ? "text-black font-semibold" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"}`}
         style={{ fontFamily: "'Anthropic Serif', serif" }}>
         <span>{selected.label}</span>
-        <svg width="10" height="6" viewBox="0 0 12 8" fill="none" style={{ opacity: 0.6, flexShrink: 0, marginTop: 2 }}>
+        <svg width="10" height="6" viewBox="0 0 12 8" fill="none" style={{ opacity: 0.6, flexShrink: 0, marginTop: 2 }} className={isColorMode ? "text-black" : ""}>
           <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
@@ -581,7 +580,7 @@ function ComparableDropdown({ value, onChange, options }: { value: string; onCha
 }
 
 // ─── INLINE PILL DROPDOWN ────────────────────────────────────────────────────
-function InlineDropdown({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+function InlineDropdown({ value, onChange, isColorMode }: { value: string; onChange: (id: string) => void; isColorMode: boolean }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const scenariosByCategory = SCENARIOS.filter(s => s.category !== "Typical Usage").reduce((acc, s) => {
@@ -599,7 +598,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
   return (
     <span className="inline-flex items-stretch h-full">
       <button onClick={() => setOpen(v => !v)}
-        className="cursor-pointer inline-flex items-center gap-2 font-semibold transition-all hover:bg-gray-50 dark:hover:bg-[#1a1a1a] active:bg-gray-100 dark:active:bg-[#222222] rounded-l-[100px] focus:outline-none dark:text-gray-100"
+        className={`cursor-pointer inline-flex items-center gap-2 font-semibold transition-all hover:bg-black/5 active:bg-black/10 rounded-l-[100px] focus:outline-none ${isColorMode ? "text-black" : "text-gray-900"}`}
         style={{
           padding: "6px 14px 6px 22px",
           background: "transparent",
@@ -608,7 +607,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
           lineHeight: "inherit",
         }}>
         {selected.text}
-        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" style={{ opacity: 0.55, flexShrink: 0, marginTop: 1 }} className="text-gray-900 dark:text-gray-100">
+        <svg width="12" height="8" viewBox="0 0 12 8" fill="none" style={{ opacity: 0.8, flexShrink: 0, marginTop: 1 }} className={isColorMode ? "text-black" : "text-gray-900"}>
           <path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </button>
@@ -619,7 +618,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
             <motion.div
               initial={{ opacity: 0, y: -4, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }} transition={{ duration: 0.12 }}
-              className="absolute top-full left-1/2 -translate-x-1/2 mt-3 bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-800 rounded-3xl shadow-2xl z-[60] flex flex-col overflow-hidden w-[90vw] max-w-[800px] text-left"
+              className="absolute top-full left-1/2 -translate-x-1/2 mt-3 bg-white/90 border border-black/5 rounded-3xl shadow-2xl z-[60] flex flex-col overflow-hidden w-[90vw] max-w-[800px] text-left backdrop-blur-md"
               style={{
                 fontFamily: "'Anthropic Sans', sans-serif",
                 fontSize: "min(1.2rem, 16px)",
@@ -628,7 +627,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
 
                 {/* ── Average Compiled Usage at the top ── */}
                 <div>
-                  <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-1.5 text-center w-full" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>Average Compiled Usage</div>
+                  <div className={`text-[10px] font-bold tracking-widest ${isColorMode ? "text-black" : "text-gray-400"} uppercase mb-1.5 text-center w-full`} style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>Average Compiled Usage</div>
                   <div className="flex gap-4">
                     {SCENARIOS.filter(s => s.category === 'Typical Usage').map(s => {
                       const e = getEnergyWh(s.id, s.baseEnergyWh, 'commercial');
@@ -653,8 +652,8 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                 {/* ── Task categories grid ── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {Object.entries(scenariosByCategory).map(([category, items]) => (
-                    <div key={category} className="flex flex-col gap-2.5 bg-gray-100/50 dark:bg-gray-900/50 rounded-2xl p-3 border border-gray-100 dark:border-gray-800">
-                      <div className="text-[10px] font-bold tracking-widest text-gray-500 uppercase text-center w-full" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>{category}</div>
+                    <div key={category} className={`flex flex-col gap-2.5 ${isColorMode ? "bg-black/10" : "bg-black/5"} rounded-2xl p-3 border border-black/5`}>
+                      <div className={`text-[10px] font-bold tracking-widest ${isColorMode ? "text-black" : "text-gray-500"} uppercase text-center w-full`} style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>{category}</div>
                       <div className="flex flex-col gap-2.5">
                         {items.filter(s => s.dropdownText.toLowerCase().includes(search.toLowerCase()) || s.verb.toLowerCase().includes(search.toLowerCase())).map(s => {
                           const e = getEnergyWh(s.id, s.baseEnergyWh, 'commercial');
@@ -679,11 +678,10 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                   ))}
                 </div>
 
-                {/* ── Footer: Custom button + legend on same row ── */}
-                <div className="flex items-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-800" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+                <div className="flex items-center gap-3 pt-2 border-t border-black/5" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
                   <button onClick={() => { onChange('custom'); setOpen(false); }}
                     style={{ fontFamily: "'Anthropic Sans', sans-serif" }}
-                    className={`px-4 py-1.5 rounded-xl text-[12px] border transition-all shrink-0 ${value === 'custom' ? 'bg-white dark:bg-gray-700 border-black dark:border-white border-2 font-bold text-black dark:text-white shadow-sm' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium text-gray-700 dark:text-gray-300 shadow-sm'}`}>
+                    className={`px-4 py-1.5 rounded-xl text-[12px] border transition-all shrink-0 ${value === 'custom' ? 'bg-white border-black border-2 font-bold text-black shadow-sm' : 'bg-white/50 border-black/5 hover:bg-white/80 font-medium text-gray-700 shadow-sm'}`}>
                     Custom
                   </button>
                   {/* Color scale legend: gradient bar + separate >100 kWh dot */}
@@ -697,7 +695,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                         <div className="flex-1 h-full" style={{ background: 'linear-gradient(to right, rgba(215,190,35, 0.7) 0%, rgba(225,110,25, 0.7) 10%, rgba(210,40,30, 0.7) 100%)' }} />
                       </div>
 
-                      <div className="relative w-full h-3 mt-0.5 text-[8.5px] text-gray-400" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+                      <div className={`relative w-full h-3 mt-0.5 text-[8.5px] ${isColorMode ? "text-black/80" : "text-gray-400"}`} style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
                         <span className="absolute left-0">0 Wh</span>
                         <span className="absolute left-[35%] -translate-x-1/2">10 Wh</span>
                         <span className="absolute right-0">1 kWh</span>
@@ -706,7 +704,7 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                     {/* Separate >100 kWh outlier indicator - 70% opacity dark red + condensed shadow */}
                     <div className="flex flex-col items-center gap-0.5 shrink-0 ml-1">
                       <div className="w-2.5 h-2.5 rounded-full shadow-[2px_2px_3px_rgba(0,0,0,0.5)]" style={{ background: 'rgba(124, 17, 3, 0.7)' }} />
-                      <span className="text-[8px] text-gray-400 leading-none whitespace-nowrap" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>&gt;100 kWh</span>
+                      <span className={`text-[8px] ${isColorMode ? "text-black/80" : "text-gray-400"} leading-none whitespace-nowrap`} style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>&gt;100 kWh</span>
                     </div>
                   </div>
                 </div>
@@ -720,14 +718,14 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
   );
 }
 
-function InlineMultiplier({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+function InlineMultiplier({ value, onChange, isColorMode }: { value: number; onChange: (v: number) => void; isColorMode: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="flex items-stretch relative">
       <button onClick={() => setOpen(v => !v)}
         className={`cursor-pointer inline-flex items-center justify-center transition-colors focus:outline-none ${open ? '' : 'rounded-r-[100px]'}`}
         style={{ fontFamily: "'Anthropic Sans', sans-serif", fontSize: "14px", padding: "6px 20px 6px 14px" }}>
-        <span className="font-bold text-gray-500 hover:text-gray-700 flex items-baseline leading-none">
+        <span className={`font-bold ${isColorMode ? "text-black" : "text-gray-500"} hover:text-gray-700 flex items-baseline leading-none`}>
           <span className="text-[0.75em] mr-[1px]">×</span>
           <span>{value}</span>
         </span>
@@ -739,14 +737,14 @@ function InlineMultiplier({ value, onChange }: { value: number; onChange: (v: nu
              animate={{ width: "auto", opacity: 1 }}
              exit={{ width: 0, opacity: 0 }}
              transition={{ duration: 0.2, ease: "easeOut" }}
-             className="overflow-hidden flex items-center bg-gray-50 rounded-r-[100px]"
+             className="overflow-hidden flex items-center bg-black/5 rounded-r-[100px]"
            >
               <div className="pl-2 pr-5 py-0 flex items-center w-[130px] sm:w-[150px]">
                 <input type="range" min={1} max={50} value={value} 
                        onChange={e => onChange(Number(e.target.value))} 
                        onMouseUp={() => setOpen(false)}
                        onTouchEnd={() => setOpen(false)}
-                       className="w-full h-1.5 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-black" />
+                       className={`w-full h-1.5 ${isColorMode ? "bg-black/20" : "bg-gray-300"} rounded-lg appearance-none cursor-pointer accent-black`} />
               </div>
            </motion.div>
         )}
@@ -756,9 +754,9 @@ function InlineMultiplier({ value, onChange }: { value: number; onChange: (v: nu
 }
 
 // ─── DUAL ESTIMATE SELECTORS ─────────────────────────────────────────────────
-function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTierFixed, showReasoning, isReasoningModel, onReasoningChange }: {
+function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTierFixed, showReasoning, isReasoningModel, onReasoningChange, isColorMode }: {
   tier: ModelTier; wueTier: WueTier; onTierChange: (t: ModelTier) => void; onWueTierChange: (w: WueTier) => void; isTierFixed?: boolean;
-  showReasoning?: boolean; isReasoningModel?: boolean; onReasoningChange?: (v: boolean) => void;
+  showReasoning?: boolean; isReasoningModel?: boolean; onReasoningChange?: (v: boolean) => void; isColorMode: boolean;
 }) {
   const displayTier = isTierFixed ? "commercial" : tier;
   return (
@@ -767,15 +765,24 @@ function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTie
         
         {/* Energy Estimate Group (Inline Right) */}
         <div className="flex items-center gap-2">
-          <span className="text-[9px] text-gray-400 dark:text-gray-500 font-medium w-[50px] text-right leading-tight shrink-0">Energy<br/>estimate</span>
-          <div className="flex gap-0.5 bg-gray-100 dark:bg-gray-800/80 rounded-full p-0.5">
-            {(["research", "commercial", "frontier"] as ModelTier[]).map(t => (
-              <button key={t} onClick={() => !isTierFixed && onTierChange(t)}
-                disabled={isTierFixed && t !== "commercial"}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${(isTierFixed ? t === "commercial" : tier === t) ? "bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm" : isTierFixed ? "text-gray-300 dark:text-gray-600 opacity-50 cursor-not-allowed" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}>
-                {TIER_META[t].rangeLabel}
-              </button>
-            ))}
+          <span className={`text-[9px] ${isColorMode ? "text-black" : "text-gray-400"} font-medium w-[50px] text-right leading-tight shrink-0`}>Energy<br/>estimate</span>
+          <div className={`flex gap-0.5 ${isColorMode ? "bg-white/40" : "bg-black/5"} rounded-full p-0.5`}>
+            {(["research", "commercial", "frontier"] as ModelTier[]).map(t => {
+              const isSelected = isTierFixed ? t === "commercial" : tier === t;
+              return (
+                <button key={t} onClick={() => !isTierFixed && onTierChange(t)}
+                  disabled={isTierFixed && t !== "commercial"}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                    isSelected 
+                      ? "bg-white text-black shadow-sm" 
+                      : isColorMode 
+                        ? (isTierFixed ? "text-black/30 opacity-50 cursor-not-allowed" : "bg-transparent text-gray-700 hover:text-black hover:bg-white/20") 
+                        : (isTierFixed ? "text-gray-300 opacity-50 cursor-not-allowed" : "text-gray-400 hover:text-gray-600")
+                  }`}>
+                  {TIER_META[t].rangeLabel}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -784,7 +791,7 @@ function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTie
           <div className="relative group flex items-center shrink-0 z-[100]">
             <button 
               onClick={() => onReasoningChange(!isReasoningModel)}
-              className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-full text-[12px] sm:text-[11px] font-medium transition-all shadow-sm border ${isReasoningModel ? 'bg-gray-900 border-gray-900 text-white dark:bg-gray-100 dark:border-gray-100 dark:text-gray-900' : 'bg-white border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 dark:bg-transparent dark:border-gray-700 dark:text-gray-500 dark:hover:text-gray-300'}`}
+              className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded-full text-[12px] sm:text-[11px] font-medium transition-all shadow-sm border ${isReasoningModel ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-black/5 text-gray-400 hover:text-gray-600 hover:border-gray-200'}`}
             >
                Reasoning AI
             </button>
@@ -797,22 +804,31 @@ function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTie
 
       </div>
       <div className="flex items-center gap-2 mt-1 relative w-full justify-center">
-        <span className="text-[9px] text-gray-400 dark:text-gray-500 font-medium w-[50px] text-right leading-tight shrink-0">Water<br/>location</span>
-        <div className="flex gap-0.5 bg-gray-100 dark:bg-gray-800/80 rounded-full p-0.5">
-          {(["efficient", "average", "intensive"] as WueTier[]).map(w => (
-            <button key={w} onClick={() => onWueTierChange(w)}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${wueTier === w ? "bg-white dark:bg-gray-700 text-black dark:text-white shadow-sm" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}>
-              {WUE_META[w].label}
-            </button>
-          ))}
+        <span className={`text-[9px] ${isColorMode ? "text-black" : "text-gray-400"} font-medium w-[50px] text-right leading-tight shrink-0`}>Water<br/>intensity</span>
+        <div className={`flex gap-0.5 ${isColorMode ? "bg-white/40" : "bg-black/5"} rounded-full p-0.5`}>
+          {(["efficient", "average", "intensive"] as WueTier[]).map(w => {
+            const isSelected = wueTier === w;
+            return (
+              <button key={w} onClick={() => onWueTierChange(w)}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
+                  isSelected 
+                    ? "bg-white text-black shadow-sm" 
+                    : isColorMode 
+                      ? "bg-transparent text-gray-700 hover:text-black hover:bg-white/10" 
+                      : "text-gray-400 hover:text-gray-600"
+                }`}>
+                {WUE_META[w].label}
+              </button>
+            );
+          })}
         </div>
       </div>
       {isTierFixed && (
-        <p className="text-[10px] text-gray-600 dark:text-amber-800 font-medium bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 mt-1 mb-0.5">
+        <p className={`text-[10px] ${isColorMode ? "text-black font-semibold" : "text-gray-600"} font-medium bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200 mt-1 mb-0.5`}>
           Only "Average" (Standard) data is available for this medium
         </p>
       )}
-      <p className="text-[10px] text-gray-400 dark:text-gray-500 italic text-center max-w-sm leading-relaxed mt-0.5">
+      <p className={`text-[10px] ${isColorMode ? "text-black font-medium" : "text-gray-400"} italic text-center max-w-sm leading-relaxed mt-0.5`}>
         {TIER_META[displayTier].source} (energy) · {WUE_META[wueTier].source} (water)
       </p>
     </div>
@@ -822,7 +838,7 @@ function EstimateSelectors({ tier, wueTier, onTierChange, onWueTierChange, isTie
 
 
 // ─── CUSTOM CALCULATOR ────────────────────────────────────────────────────────
-function CustomCalculator({ counts, onChange, totalE, totalW, energyComp, setEnergyComp, waterComp, setWaterComp }: {
+function CustomCalculator({ counts, onChange, totalE, totalW, energyComp, setEnergyComp, waterComp, setWaterComp, isColorMode }: {
   counts: Record<string, number>;
   onChange: (id: string, val: number) => void;
   totalE: number;
@@ -831,6 +847,7 @@ function CustomCalculator({ counts, onChange, totalE, totalW, energyComp, setEne
   setEnergyComp: (id: string) => void;
   waterComp: string;
   setWaterComp: (id: string) => void;
+  isColorMode: boolean;
 }) {
   return (
     <div className="flex flex-col gap-3 w-full max-w-lg mx-auto mt-2">
@@ -855,14 +872,14 @@ function CustomCalculator({ counts, onChange, totalE, totalW, energyComp, setEne
               <strong style={{ borderBottom: "2px solid currentColor", paddingBottom: "1px", whiteSpace: "nowrap" }}>{fmtWater(totalW)}</strong>{" "}
               of water.
             </p>
-            <div className="text-[0.9rem] min-[400px]:text-[1.05rem] sm:text-[1.15rem] md:text-[1.25rem] leading-[1.6] text-gray-500 dark:text-gray-400 text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-2 sm:px-4" style={{ fontFamily: "'Anthropic Serif', serif" }}>
+            <div className={`text-[0.9rem] min-[400px]:text-[1.05rem] sm:text-[1.15rem] md:text-[1.25rem] leading-[1.6] ${isColorMode ? "text-black/80" : "text-gray-500"} text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-2 sm:px-4`} style={{ fontFamily: "'Anthropic Serif', serif" }}>
               <span>That's</span>
-              <span className="font-medium text-gray-500 dark:text-gray-400">{equivEnergyVal(totalE, energyComp)}</span>
-              <ComparableDropdown value={energyComp} onChange={setEnergyComp} options={ENERGY_COMPARABLES} />
+              <span className={`font-medium ${isColorMode ? "text-black" : "text-gray-500"}`}>{equivEnergyVal(totalE, energyComp)}</span>
+              <ComparableDropdown value={energyComp} onChange={setEnergyComp} options={ENERGY_COMPARABLES} isColorMode={isColorMode} />
               <span>and</span>
               <span className="flex items-center gap-1.5 whitespace-nowrap">
-                <span className="font-medium text-gray-500 dark:text-gray-400">{equivWaterVal(totalW, waterComp)}</span>
-                <ComparableDropdown value={waterComp} onChange={setWaterComp} options={WATER_COMPARABLES} />
+                <span className={`font-medium ${isColorMode ? "text-black" : "text-gray-500"}`}>{equivWaterVal(totalW, waterComp)}</span>
+                <ComparableDropdown value={waterComp} onChange={setWaterComp} options={WATER_COMPARABLES} isColorMode={isColorMode} />
               </span>
             </div>
           </>
@@ -1300,7 +1317,7 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState("short-chat");
   const [tier, setTier] = useState<ModelTier>("commercial");
   const [wueTier, setWueTier] = useState<WueTier>("average");
-  const { theme, setTheme } = useTheme();
+  const [isColorMode, setIsColorMode] = useState(false);
   const [showMath, setShowMath] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
   const [activePanel, setActivePanel] = useState<'methodology' | 'offsets' | null>(null);
@@ -1353,8 +1370,24 @@ export default function Home() {
 
   const panelOpen = activePanel !== null;
 
+  // Colorful Mode Background
+  const impactRgb = getEnergyColorRgb(energyWh);
+  const colorModeBg = `rgba(${impactRgb.r}, ${impactRgb.g}, ${impactRgb.b}, 0.8)`;
+
   return (
-    <div className="md:h-screen bg-white dark:bg-[#0a0a0a] flex flex-col md:flex-row md:overflow-hidden transition-colors duration-500 text-gray-900 dark:text-gray-100" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+    <div className={`relative md:h-screen bg-white flex flex-col md:flex-row md:overflow-hidden transition-colors duration-500 text-gray-900`} style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
+      {/* Dynamic Colorful Background Layer */}
+      <AnimatePresence>
+        {isColorMode && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, backgroundColor: colorModeBg }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="fixed inset-0 z-0 pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
 
       {/* ─── LEFT COLUMN: primary calculator ─── */}
       <motion.div
@@ -1379,17 +1412,16 @@ export default function Home() {
                     const rgb = getEnergyColorRgb(energyWh);
                     const pillStyle = {
                       borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`,
-                      boxShadow: `0 0 20px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35), 0 0 50px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15), 0 0 80px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`,
-                      transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
+                      transition: 'border-color 0.4s ease',
                     };
 
                     return (
-                      <span style={pillStyle} className="inline-flex items-stretch flex-wrap justify-center z-50 bg-white dark:bg-[#121212] border-[3px] rounded-[100px] hover:shadow-lg transition-all relative">
-                        <InlineDropdown value={selectedId} onChange={setSelectedId} />
+                      <span style={pillStyle} className="inline-flex items-stretch flex-wrap justify-center z-50 bg-white border-[3px] rounded-[100px] shadow-sm hover:shadow-md transition-all relative">
+                        <InlineDropdown value={selectedId} onChange={setSelectedId} isColorMode={isColorMode} />
                         {!isCustom && (
                           <>
-                            <div className="w-px bg-gray-200 dark:bg-gray-700 my-2" />
-                            <InlineMultiplier value={multiplier} onChange={setMultiplier} />
+                            <div className={`w-px ${isColorMode ? "bg-black/10" : "bg-gray-200"} my-2`} />
+                            <InlineMultiplier value={multiplier} onChange={setMultiplier} isColorMode={isColorMode} />
                           </>
                         )}
                       </span>
@@ -1419,20 +1451,21 @@ export default function Home() {
                     setEnergyComp={setEnergyComp}
                     waterComp={waterComp}
                     setWaterComp={setWaterComp}
+                    isColorMode={isColorMode}
                   />
                 </div>
               ) : scenario ? (
                 <>
                   {/* Secondary: equivalency */}
-                  <div className={`${isMd && panelOpen ? 'text-[0.8rem] sm:text-[0.95rem]' : 'text-[0.9rem] min-[400px]:text-[1.05rem] sm:text-[1.15rem] md:text-[1.25rem]'} leading-[1.6] text-gray-500 dark:text-gray-400 text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-2 sm:px-4`}
+                  <div className={`${isMd && panelOpen ? 'text-[0.8rem] sm:text-[0.95rem]' : 'text-[0.9rem] min-[400px]:text-[1.05rem] sm:text-[1.15rem] md:text-[1.25rem]'} leading-[1.6] ${isColorMode ? 'text-black/90' : 'text-gray-500'} text-center mt-3 mb-4 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 max-w-2xl px-2 sm:px-4`}
                     style={{ fontFamily: "'Anthropic Serif', serif" }}>
                     <span>That's</span>
-                    <span className="font-medium text-gray-500 dark:text-gray-400">{equivEnergyVal(energyWh, energyComp)}</span>
-                    <ComparableDropdown value={energyComp} onChange={setEnergyComp} options={ENERGY_COMPARABLES} />
+                    <span className={`font-medium ${isColorMode ? 'text-black/90' : 'text-gray-500'}`}>{equivEnergyVal(energyWh, energyComp)}</span>
+                    <ComparableDropdown value={energyComp} onChange={setEnergyComp} options={ENERGY_COMPARABLES} isColorMode={isColorMode} />
                     <span>and</span>
                     <span className="flex items-center gap-1.5 whitespace-nowrap">
-                      <span className="font-medium text-gray-500 dark:text-gray-400">{equivWaterVal(waterMl, waterComp)}</span>
-                      <ComparableDropdown value={waterComp} onChange={setWaterComp} options={WATER_COMPARABLES} />
+                      <span className={`font-medium ${isColorMode ? 'text-black/90' : 'text-gray-500'}`}>{equivWaterVal(waterMl, waterComp)}</span>
+                      <ComparableDropdown value={waterComp} onChange={setWaterComp} options={WATER_COMPARABLES} isColorMode={isColorMode} />
                     </span>
                   </div>
 
@@ -1443,6 +1476,7 @@ export default function Home() {
                       showReasoning={scenario ? !["image", "video", "training-llm"].includes(scenario.id) : false}
                       isReasoningModel={isReasoningModel}
                       onReasoningChange={setIsReasoningModel}
+                      isColorMode={isColorMode}
                     />
                   </div>
 
@@ -1452,12 +1486,14 @@ export default function Home() {
                       icon={<BookOpen size={18} />}
                       label="Methodology & Sources"
                       active={activePanel === 'methodology'}
+                      isColorMode={isColorMode}
                       onClick={() => setActivePanel(activePanel === 'methodology' ? null : 'methodology')}
                     />
                     <SlideHoverIcon
                       icon={<Leaf size={18} />}
                       label="Offset My Impact"
                       active={activePanel === 'offsets'}
+                      isColorMode={isColorMode}
                       onClick={() => setActivePanel(activePanel === 'offsets' ? null : 'offsets')}
                     />
                   </div>
@@ -1474,15 +1510,15 @@ export default function Home() {
                           transition={{ duration: 0.3, ease: 'easeOut' }}
                           className="overflow-hidden"
                         >
-                          <div className="bg-gray-50/50 dark:bg-[#0d0d0d] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 mb-4">
+                          <div className={`relative z-20 ${isColorMode ? "bg-white shadow-sm" : "bg-gray-50/50"} dark:bg-[#0d0d0d] border border-gray-200 dark:border-gray-800 rounded-2xl p-4 mb-4`}>
                             <button
                               onClick={() => setActivePanel(null)}
-                              className="text-xs font-medium text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-4 flex items-center gap-1 transition-colors"
+                              className={`text-xs font-medium ${isColorMode ? "text-black/60" : "text-gray-400"} hover:text-gray-700 dark:hover:text-gray-200 mb-4 flex items-center gap-1 transition-colors`}
                             >
                               <ChevronLeft size={14} /> Close
                             </button>
-                            {activePanel === 'methodology' && <MethodologyPanel scenario={scenario} tier={tier} wueTier={wueTier} energyWh={energyWh} waterMl={waterMl} onShowMath={() => { setActivePanel(null); setShowMath(true); }} />}
-                            {activePanel === 'offsets' && <OffsetsPanel energyWh={energyWh} waterMl={waterMl} />}
+                            {activePanel === 'methodology' && <MethodologyPanel scenario={scenario} tier={tier} wueTier={wueTier} energyWh={energyWh} waterMl={waterMl} isColorMode={isColorMode} onShowMath={() => { setActivePanel(null); setShowMath(true); }} />}
+                            {activePanel === 'offsets' && <OffsetsPanel energyWh={energyWh} waterMl={waterMl} isColorMode={isColorMode} />}
                           </div>
                         </motion.div>
                       )}
@@ -1500,7 +1536,7 @@ export default function Home() {
         {panelOpen && (
           <motion.div
             key={activePanel}
-            className="h-full border-l border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#0d0d0d] overflow-y-auto hidden md:block"
+            className={`h-full border-l border-gray-200 dark:border-gray-800 ${isColorMode ? "bg-white" : "bg-gray-50/50"} dark:bg-[#0d0d0d] overflow-y-auto hidden md:block relative z-10`}
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: '65%', opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
@@ -1509,12 +1545,12 @@ export default function Home() {
             <div className="p-6 md:p-10 lg:p-12">
               <button
                 onClick={() => setActivePanel(null)}
-                className="text-xs font-medium text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-6 flex items-center gap-1 transition-colors"
+                className={`text-xs font-medium ${isColorMode ? "text-black/60" : "text-gray-400"} hover:text-gray-700 dark:hover:text-gray-200 mb-6 flex items-center gap-1 transition-colors`}
               >
                 <ChevronLeft size={14} /> Close panel
               </button>
-              {activePanel === 'methodology' && <MethodologyPanel scenario={scenario} tier={tier} wueTier={wueTier} energyWh={energyWh} waterMl={waterMl} onShowMath={() => { setActivePanel(null); setShowMath(true); }} />}
-              {activePanel === 'offsets' && <OffsetsPanel energyWh={energyWh} waterMl={waterMl} />}
+              {activePanel === 'methodology' && <MethodologyPanel scenario={scenario} tier={tier} wueTier={wueTier} energyWh={energyWh} waterMl={waterMl} isColorMode={isColorMode} onShowMath={() => { setActivePanel(null); setShowMath(true); }} />}
+              {activePanel === 'offsets' && <OffsetsPanel energyWh={energyWh} waterMl={waterMl} isColorMode={isColorMode} />}
             </div>
           </motion.div>
         )}
@@ -1523,14 +1559,17 @@ export default function Home() {
       {/* ─── BOTTOM RIGHT: Coffee & Theme toggles ─── */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         <SlideHoverIcon
-          icon={theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-          label="Toggle Theme"
+          icon={<Palette size={16} />}
+          label="Colorful Mode"
+          active={isColorMode}
+          isColorMode={isColorMode}
           direction="left"
-          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          onClick={() => setIsColorMode(!isColorMode)}
         />
         <SlideHoverIcon
           icon={<Coffee size={16} />}
           label="Feedback & Coffee"
+          isColorMode={isColorMode}
           direction="left"
           onClick={() => setShowSupport(true)}
         />
