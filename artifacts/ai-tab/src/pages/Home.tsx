@@ -360,6 +360,16 @@ const SCENARIOS: Scenario[] = [
       water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023", derivation: "Standard energy × Typical WUE: 1,177 Wh × 3.45 mL/Wh ≈ 4.1 L per month." },
     },
   },
+  {
+    id: "typical-year", category: "Typical Usage", verb: "Using AI for", dropdownText: "a typical year", dropdownLabel: "a typical year of AI use", buttonText: "Yearly AI use",
+    clarifying: "An accumulated year of active AI assistance. Based on 12 months of power-user activity. Represents the significant cumulative footprint of individual AI habits over a long duration.",
+    baseEnergyWh: 11885.28, energyLow: 11885.28, energyHigh: 101227.2, baseWaterMl: 11885.28 * 3.45,
+    confidence: "low", tierSensitive: true,
+    math: {
+      energy: { equation: "Energy = Monthly Use × 12", sourceName: "Composite — Extrapolated from monthly averages", derivation: "Calculated as 12× high-frequency monthly usage: 1,177 Wh × 12 ≈ 14.1 kWh." },
+      water: { equation: "Water = Energy (Wh) × WUE (mL/Wh)", sourceName: "Google Cloud 2025 · Li et al. 2023", derivation: "Standard energy × Typical WUE: 14.1 kWh × 3.45 mL/Wh ≈ 49.2 L per year." },
+    },
+  },
 ];
 
 // ─── CUSTOM CALCULATOR ────────────────────────────────────────────────────────
@@ -619,22 +629,20 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                 {/* ── Average Compiled Usage at the top ── */}
                 <div>
                   <div className="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-1.5 text-center w-full" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>Average Compiled Usage</div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-4">
                     {SCENARIOS.filter(s => s.category === 'Typical Usage').map(s => {
                       const e = getEnergyWh(s.id, s.baseEnergyWh, 'commercial');
                       const rgb = getEnergyColorRgb(e);
                       const isSelected = s.id === value;
-                      const baseBg = `rgba(${rgb.r},${rgb.g},${rgb.b},0.8)`;
-                      const isDark = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) < 140; 
-                      const textColor = isDark ? 'text-white' : 'text-gray-900';
+                      const baseBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.7)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`;
                       return (
                         <button key={s.id} onClick={() => { onChange(s.id); setOpen(false); }}
                           style={{ 
                             backgroundColor: baseBg, 
-                            boxShadow: `0 3px 10px rgba(${rgb.r},${rgb.g},${rgb.b},0.2)`,
+                            boxShadow: isSelected ? `2.5px 2.5px 4px rgba(0,0,0,0.6)` : `1.5px 1.5px 3px rgba(0,0,0,0.45)`,
                             fontFamily: "'Anthropic Sans', sans-serif" 
                           }}
-                          className={`flex-1 text-center px-4 rounded-xl text-[13px] h-10 flex items-center justify-center transition-all border-0 ${isSelected ? 'font-bold scale-[1.03] ring-1 ring-black/10' : 'font-medium filter brightness-105 hover:brightness-110 hover:scale-[1.01]'} ${textColor}`}>
+                          className={`flex-1 text-center px-1.5 rounded-xl text-[11.5px] h-[34px] flex items-center justify-center transition-all border-0 text-black/90 ${isSelected ? 'font-bold scale-[1.02]' : 'font-medium filter brightness-105 hover:brightness-110 hover:scale-[1.01]'}`}>
                           <span className="truncate whitespace-nowrap">{s.buttonText}</span>
                         </button>
                       );
@@ -645,25 +653,23 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                 {/* ── Task categories grid ── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {Object.entries(scenariosByCategory).map(([category, items]) => (
-                    <div key={category} className="flex flex-col gap-1.5 bg-gray-100/50 dark:bg-gray-900/50 rounded-2xl p-3 border border-gray-100 dark:border-gray-800">
+                    <div key={category} className="flex flex-col gap-2.5 bg-gray-100/50 dark:bg-gray-900/50 rounded-2xl p-3 border border-gray-100 dark:border-gray-800">
                       <div className="text-[10px] font-bold tracking-widest text-gray-500 uppercase text-center w-full" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>{category}</div>
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-2.5">
                         {items.filter(s => s.dropdownText.toLowerCase().includes(search.toLowerCase()) || s.verb.toLowerCase().includes(search.toLowerCase())).map(s => {
                           const e = getEnergyWh(s.id, s.baseEnergyWh, 'commercial');
                           const rgb = getEnergyColorRgb(e);
                           const isSelected = s.id === value;
-                          const baseBg = `rgba(${rgb.r},${rgb.g},${rgb.b},0.8)`;
-                          const isDark = (rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114) < 140;
-                          const textColor = isDark ? 'text-white' : 'text-gray-900';
+                          const baseBg = isSelected ? `rgba(${rgb.r},${rgb.g},${rgb.b},0.7)` : `rgba(${rgb.r},${rgb.g},${rgb.b},0.3)`;
                           return (
                             <button key={s.id} onClick={() => { onChange(s.id); setOpen(false); }}
                               title={`${s.verb} ${s.dropdownText}`}
                               style={{ 
                                 backgroundColor: baseBg, 
-                                boxShadow: `0 3px 10px rgba(${rgb.r},${rgb.g},${rgb.b},0.2)`,
+                                boxShadow: isSelected ? `2.5px 2.5px 4px rgba(0,0,0,0.6)` : `1.5px 1.5px 3px rgba(0,0,0,0.45)`,
                                 fontFamily: "'Anthropic Sans', sans-serif" 
                               }}
-                              className={`text-center px-2 rounded-xl text-[12px] flex items-center justify-center h-10 transition-all border-0 overflow-hidden ${isSelected ? 'font-bold scale-[1.03] ring-1 ring-black/10' : 'font-medium filter brightness-105 hover:brightness-110 hover:scale-[1.01]'} ${textColor}`}>
+                              className={`text-center px-2 rounded-xl text-[11px] flex items-center justify-center h-[34px] transition-all border-0 overflow-hidden text-black/90 ${isSelected ? 'font-bold scale-[1.02]' : 'font-medium filter brightness-105 hover:brightness-110 hover:scale-[1.01]'}`}>
                               <span className="truncate whitespace-nowrap w-full">{s.buttonText}</span>
                             </button>
                           );
@@ -683,12 +689,12 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                   {/* Color scale legend: gradient bar + separate >100 kWh dot */}
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                      <div className="flex w-full h-2 rounded-full overflow-hidden">
-                        {/* Segment 1: 0 -> 10 Wh (35% width) */}
-                        <div className="w-[35%] h-full" style={{ background: 'linear-gradient(to right, rgb(15,60,45), rgb(215,190,35))' }} />
+                      <div className="flex w-full h-2 rounded-full overflow-hidden shadow-[2px_2px_4px_rgba(0,0,0,0.4)]">
+                        {/* Segment 1: 0 -> 10 Wh (35% width) - 70% opacity colors */}
+                        <div className="w-[35%] h-full" style={{ background: 'linear-gradient(to right, rgba(15,60,45, 0.7), rgba(215,190,35, 0.7))' }} />
                         <div className="w-[1px] bg-white/40 h-full shrink-0" />
-                        {/* Segment 2: 10 -> 1000 Wh (Remaining width) */}
-                        <div className="flex-1 h-full" style={{ background: 'linear-gradient(to right, rgb(215,190,35) 0%, rgb(225,110,25) 10%, rgb(210,40,30) 100%)' }} />
+                        {/* Segment 2: 10 -> 1000 Wh (Remaining width) - 70% opacity colors */}
+                        <div className="flex-1 h-full" style={{ background: 'linear-gradient(to right, rgba(215,190,35, 0.7) 0%, rgba(225,110,25, 0.7) 10%, rgba(210,40,30, 0.7) 100%)' }} />
                       </div>
 
                       <div className="relative w-full h-3 mt-0.5 text-[8.5px] text-gray-400" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>
@@ -697,9 +703,9 @@ function InlineDropdown({ value, onChange }: { value: string; onChange: (id: str
                         <span className="absolute right-0">1 kWh</span>
                       </div>
                     </div>
-                    {/* Separate >100 kWh outlier indicator - distinctly darker red */}
+                    {/* Separate >100 kWh outlier indicator - 70% opacity dark red + condensed shadow */}
                     <div className="flex flex-col items-center gap-0.5 shrink-0 ml-1">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: '#7c1103' }} />
+                      <div className="w-2.5 h-2.5 rounded-full shadow-[2px_2px_3px_rgba(0,0,0,0.5)]" style={{ background: 'rgba(124, 17, 3, 0.7)' }} />
                       <span className="text-[8px] text-gray-400 leading-none whitespace-nowrap" style={{ fontFamily: "'Anthropic Sans', sans-serif" }}>&gt;100 kWh</span>
                     </div>
                   </div>
